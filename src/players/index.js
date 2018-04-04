@@ -22,6 +22,6 @@ export default [
   DailyMotion,
   Mixcloud,
   UstreamLive,
+  FilePlayer,
   Iframe,
-  FilePlayer
 ]
