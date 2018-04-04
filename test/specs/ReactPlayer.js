@@ -200,17 +200,14 @@ describe('ReactPlayer', () => {
 
       it('plays after a delay', done => {
         const playPlayer = () => {
-          console.log('PLAY PLAYER')
           renderPlayer({
             url: test.url,
             playing: true,
             onPlay: () => {
-              console.log('callback?')
               done()
             }
           })
         }
-        console.log('RENDER PLAYER')
         renderPlayer({
           url: test.url,
           playing: false,
