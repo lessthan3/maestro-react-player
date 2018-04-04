@@ -203,9 +203,7 @@ describe('ReactPlayer', () => {
           renderPlayer({
             url: test.url,
             playing: true,
-            onPlay: () => {
-              done()
-            }
+            onPlay: () => done()
           })
         }
         renderPlayer({
