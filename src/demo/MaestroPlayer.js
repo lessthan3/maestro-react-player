@@ -18,18 +18,17 @@ export default class MaestroPlayer extends React.Component {
     video: null,
     ready: false
   };
-  componentDidMount() {
-    setTimeout( () => {
+  componentDidMount () {
+    setTimeout(() => {
       this.setState({
         video: {
           offset: 102,
           spot: 'tv',
-          url: 'https://mixer.com/embed/player/monstercat',
+          url: 'https://mixer.com/embed/player/monstercat'
         },
         ready: false
       })
     }, 1000)
-
   }
   // End Player Controls
   componentWillUpdate (nextProps) {
@@ -49,7 +48,7 @@ export default class MaestroPlayer extends React.Component {
   onReady = () => {
     console.log('NO READY FIRED', '123')
     console.log(this.player, 'rrr', this.playerz)
-    const { video } = this.state;
+    const { video } = this.state
     this.player.seekTo(video.offset)
     this.setState({
       ready: true
@@ -74,7 +73,7 @@ export default class MaestroPlayer extends React.Component {
   };
 
   render () {
-    const { ready, video } = this.state;
+    const { ready, video } = this.state
     console.log(video, ready, 'STATE')
     return (
       <React.Fragment>

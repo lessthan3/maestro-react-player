@@ -13,21 +13,18 @@ export class Iframe extends Component {
     currentTime: 0
   }
   load (url) {
-    setTimeout( () => this.props.onReady() , 3000)
+    setTimeout(() => this.props.onReady(), 3000)
   }
   play () {
-    console.log('play')
     this.playTime = Date.now()
     this.props.onPlay()
   }
   pause () {
-    console.log('pause')
     this.player.currentTime = this.getCurrentTime()
     this.playTime = null
     this.props.onPause()
   }
   stop () {
-    console.log('stop')
     this.player.currentTime = this.getCurrentTime()
     this.playTime = null
     this.props.onPause()
@@ -52,7 +49,6 @@ export class Iframe extends Component {
     return null
   }
   ref = container => {
-    console.log('b')
     this.container = container
   }
   render () {
