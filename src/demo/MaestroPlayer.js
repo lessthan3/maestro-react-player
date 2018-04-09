@@ -24,7 +24,7 @@ export default class MaestroPlayer extends React.Component {
         video: {
           offset: 102,
           spot: 'tv',
-          url: 'https://mixer.com/embed/player/monstercat'
+          url: 'https://twitch.tv/monstercat'
         },
         ready: false
       })
