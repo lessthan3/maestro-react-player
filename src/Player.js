@@ -18,7 +18,6 @@ export default class Player extends Component {
   onDurationCalled = false
   componentDidMount () {
     this.mounted = true
-    console.log('MOUNTED')
     this.player.load(this.props.url)
     this.progress()
   }
@@ -39,7 +38,6 @@ export default class Player extends Component {
 
       // don't double load SDK
       if (!this.isReady) {
-        console.log('PENDING')
         this.nextUrl = nextProps.url
       } else {
         this.player.load(nextProps.url, true)
