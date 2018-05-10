@@ -37,7 +37,6 @@ export class FilePlayer extends Component {
   static displayName = 'FilePlayer'
   static canPlay = canPlay
 
-  onReadyCalled = false;
   componentDidMount () {
     this.addListeners()
     if (IOS) {
@@ -58,15 +57,10 @@ export class FilePlayer extends Component {
     this.removeListeners()
   }
 
-  canPlay = () => {
-    if (!this.onReadyCalled) {
-      this.onReadyCalled = true;
-      this.props.onReady()
-    }
-  }
   addListeners () {
     const { onReady, onPlay, onPause, onEnded, onError, playsinline } = this.props
-    this.player.addEventListener('canplay', this.canPlay)
+    this.player.addEventListener('loadeddata', onReady)
+    // TODO may want canPlay to continue playing for slow browsers
     this.player.addEventListener('play', onPlay)
     this.player.addEventListener('pause', onPause)
     this.player.addEventListener('seeked', this.onSeek)
@@ -79,7 +73,8 @@ export class FilePlayer extends Component {
   }
   removeListeners () {
     const { onReady, onPlay, onPause, onEnded, onError } = this.props
-    this.player.removeEventListener('canplay', this.canPlay)
+    this.player.addEventListener('loadeddata', onReady)
+    // TODO may want canPlay to continue playing for slow browsers
     this.player.removeEventListener('play', onPlay)
     this.player.removeEventListener('pause', onPause)
     this.player.removeEventListener('seeked', this.onSeek)
