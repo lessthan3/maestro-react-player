@@ -4,6 +4,7 @@ import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 
 import ReactPlayer from '../../src/ReactPlayer'
+import { FilePlayer } from '../../src/players/FilePlayer'
 
 const { describe, it, expect, beforeEach, afterEach } = window
 
@@ -11,7 +12,7 @@ const TEST_URLS = [
   {
     name: 'FilePlayer',
     url: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv',
-    switchTo: 'https://storage.googleapis.com/media-session/elephants-dream/the-wires.mp3',
+    switchTo: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.webm',
     error: 'http://example.com/error.ogv',
     onSeek: true
   },
@@ -42,14 +43,14 @@ const TEST_URLS = [
   {
     name: 'YouTube',
     url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE',
-    switchTo: 'https://www.youtube.com/watch?v=oUFJJNQGwhk',
-    error: 'https://www.youtube.com/watch?v=xxxxxxxxxxx'
+    switchTo: 'https://www.youtube.com/watch?v=oUFJJNQGwhk'
   },
   {
     name: 'SoundCloud',
     url: 'https://soundcloud.com/miami-nights-1984/accelerated',
     switchTo: 'https://soundcloud.com/tycho/tycho-awake',
-    error: 'https://soundcloud.com/xxxxxxxxxxx/xxxxxxxxxxx'
+    error: 'https://soundcloud.com/xxxxxxxxxxx/xxxxxxxxxxx',
+    skip: true
   },
   {
     name: 'Facebook',
@@ -120,8 +121,8 @@ describe('ReactPlayer', () => {
         }
       }
     }
-    // Note that playing is set to true by default
-    render(<ReactPlayer ref={ref} playing {...props} />, div)
+    // Note that playing and muted are set to true by default
+    render(<ReactPlayer ref={ref} playing muted {...props} />, div)
   }
 
   // Test util for rendering a player and then changing props after a short time
@@ -223,8 +224,8 @@ describe('ReactPlayer', () => {
 
       it('muted change does not error', done => {
         renderPlayerChange(
-          { url: test.url, muted: false },
-          { muted: true },
+          { url: test.url, muted: true },
+          { muted: false },
           () => setTimeout(done, 1000)
         )
       })
@@ -380,6 +381,36 @@ describe('ReactPlayer', () => {
     })
   })
 
+  describe('FilePlayer forceVideo', () => {
+    beforeEach(done => {
+      renderPlayer({
+        url: 'http://example.com/file.mp3',
+        config: { file: { forceVideo: true } }
+      }, () => done())
+    })
+
+    it('forces video element', () => {
+      const video = player.getInternalPlayer()
+      expect(video).to.be.a('HTMLVideoElement')
+      expect(video.src).to.equal('http://example.com/file.mp3')
+    })
+  })
+
+  describe('FilePlayer forceAudio', () => {
+    beforeEach(done => {
+      renderPlayer({
+        url: 'http://example.com/random/path',
+        config: { file: { forceAudio: true } }
+      }, () => done())
+    })
+
+    it('forces audio element', () => {
+      const video = player.getInternalPlayer()
+      expect(video).to.be.a('HTMLAudioElement')
+      expect(video.src).to.equal('http://example.com/random/path')
+    })
+  })
+
   // onPause being called was a bug that has been fixed
   // so skip this test for now
   it.skip('Twitch switches from video to channel', done => {
@@ -435,6 +466,35 @@ describe('ReactPlayer', () => {
       const el = document.getElementById('test-hook')
       expect(el.dataset.fakeAttribute).to.equal('woah')
       expect(el.querySelectorAll('video').length).to.equal(1)
+    })
+  })
+
+  describe('custom players', () => {
+    class CustomPlayer extends React.Component {
+      static canPlay = url => true
+      static displayName = 'CustomPlayer'
+      load () {}
+      render () {
+        return (
+          <div />
+        )
+      }
+    }
+
+    it('could be added with usage of static method', () => {
+      ReactPlayer.addCustomPlayer(CustomPlayer)
+      renderPlayer({
+        url: 'test:url'
+      })
+      expect(player.player.player instanceof CustomPlayer).to.be.true
+    })
+
+    it('could be cleared with usage of static method', () => {
+      ReactPlayer.removeCustomPlayers()
+      renderPlayer({
+        url: 'test:url'
+      })
+      expect(player.player.player instanceof FilePlayer).to.be.true
     })
   })
 })

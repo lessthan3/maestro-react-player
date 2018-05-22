@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import { callPlayer, getSDK, randomString } from '../utils'
 import createSinglePlayer from '../singlePlayer'
 
-const SDK_URL = '//player.twitch.tv/js/embed/v1.js'
+const SDK_URL = 'https://player.twitch.tv/js/embed/v1.js'
 const SDK_GLOBAL = 'Twitch'
 const MATCH_VIDEO_URL = /(?:www\.|go\.)?twitch\.tv\/videos\/(\d+)($|\?)/
 const MATCH_CHANNEL_URL = /(?:www\.|go\.)?twitch\.tv\/([a-z0-9_]+)($|\?)/
@@ -41,6 +41,7 @@ export class Twitch extends Component {
         width: '100%',
         playsinline: playsinline,
         autoplay: this.props.playing,
+        muted: this.props.muted,
         ...config.twitch.options
       })
       const { READY, PLAY, PAUSE, ENDED } = Twitch.Player
@@ -80,9 +81,17 @@ export class Twitch extends Component {
   setVolume (fraction) {
     this.callPlayer('setVolume', fraction)
   }
+
   getVolume () {
     const volume = this.callPlayer('getVolume');
     return volume
+  }
+
+  mute = () => {
+    this.callPlayer('setMuted', true)
+  }
+  unmute = () => {
+    this.callPlayer('setMuted', false)
   }
   getDuration () {
     // need this for offline mode too
