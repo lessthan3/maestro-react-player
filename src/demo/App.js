@@ -102,7 +102,7 @@ class App extends Component {
     this.player = player
   }
   render () {
-    const { url, playing, volume, muted, loop, played, loaded, duration, playbackRate } = this.state
+    const { url, playing, volume, muted, loop, played, playedSeconds, loaded, duration, playbackRate } = this.state
     const SEPARATOR = ' · '
 
     return (
@@ -250,6 +250,19 @@ class App extends Component {
               </td>
             </tr>
             <tr>
+              <th>UstreamLive</th>
+              <td>
+                {this.renderLoadButton('http://www.ustream.tv/channel/6540154', 'Test A')}
+                {this.renderLoadButton('http://www.ustream.tv/channel/9408562', 'Test B')}
+              </td>
+            </tr>
+            <tr>
+              <th>Iframe</th>
+              <td>
+                {this.renderLoadButton('https://www.w3schools.com', 'Test B')}
+              </td>
+            </tr>
+            <tr>
               <th>Mixcloud</th>
               <td>
                 {this.renderLoadButton('https://www.mixcloud.com/mixcloud/meet-the-curators/', 'Test A')}
@@ -313,6 +326,10 @@ class App extends Component {
             <tr>
               <th>remaining</th>
               <td><Duration seconds={duration * (1 - played)} /></td>
+            </tr>
+            <tr>
+              <th>playedSeconds</th>
+              <td><Duration seconds={playedSeconds} /></td>
             </tr>
           </tbody></table>
         </section>
