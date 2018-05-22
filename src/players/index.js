@@ -19,5 +19,7 @@ export default [
   Twitch,
   DailyMotion,
   Mixcloud,
+  UstreamLive,
+  Iframe,
   FilePlayer
 ]
