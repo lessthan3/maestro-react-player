@@ -56,9 +56,11 @@ class App extends Component {
     this.setState({ playbackRate: parseFloat(e.target.value) })
   }
   onPlay = () => {
+    console.log('onPlay')
     this.setState({ playing: true })
   }
   onPause = () => {
+    console.log('onPause')
     this.setState({ playing: false })
   }
   onSeekMouseDown = e => {
@@ -72,15 +74,18 @@ class App extends Component {
     this.player.seekTo(parseFloat(e.target.value))
   }
   onProgress = state => {
+    console.log('onProgress', state)
     // We only want to update time slider if we are not currently seeking
     if (!this.state.seeking) {
       this.setState(state)
     }
   }
   onEnded = () => {
+    console.log('onEnded')
     this.setState({ playing: this.state.loop })
   }
   onDuration = (duration) => {
+    console.log('onDuration', duration)
     this.setState({ duration })
   }
   onClickFullscreen = () => {
@@ -97,8 +102,9 @@ class App extends Component {
     this.player = player
   }
   render () {
-    const { url, playing, volume, muted, loop, played, playedSeconds, loaded, duration, playbackRate } = this.state
+    const { url, playing, volume, muted, loop, played, loaded, duration, playbackRate } = this.state
     const SEPARATOR = ' · '
+
     return (
       <div className='app'>
         <section className='section'>
@@ -219,8 +225,7 @@ class App extends Component {
               <td>
                 {this.renderLoadButton('https://www.twitch.tv/videos/106400740', 'Test A')}
                 {this.renderLoadButton('https://www.twitch.tv/videos/12783852', 'Test B')}
-                {this.renderLoadButton('https://www.twitch.tv/ofsoulheartmind', 'Offline Test C')}
-                {this.renderLoadButton('https://www.twitch.tv/monstercat', 'Online Test C')}
+                {this.renderLoadButton('https://www.twitch.tv/kronovi', 'Test C')}
               </td>
             </tr>
             <tr>
@@ -252,22 +257,8 @@ class App extends Component {
               </td>
             </tr>
             <tr>
-              <th>UstreamLive</th>
-              <td>
-                {this.renderLoadButton('http://www.ustream.tv/channel/6540154', 'Test A')}
-                {this.renderLoadButton('http://www.ustream.tv/channel/9408562', 'Test B')}
-              </td>
-            </tr>
-            <tr>
-              <th>Iframe</th>
-              <td>
-                {this.renderLoadButton('https://mixer.com/embed/player/monstercat', 'Test A')}
-              </td>
-            </tr>
-            <tr>
               <th>Files</th>
               <td>
-                {this.renderLoadButton('https://c16bf6dae818f25ef804-3497e1c83042e554e7f05925f38cc356.ssl.cf1.rackcdn.com/56526b0eb160252f1ae2d70a/56ac5b7e959aec7372545e5f.mp4','mp4')}
                 {this.renderLoadButton('http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4', 'mp4')}
                 {this.renderLoadButton('http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv', 'ogv')}
                 {this.renderLoadButton('http://clips.vorwaerts-gmbh.de/big_buck_bunny.webm', 'webm')}
@@ -322,10 +313,6 @@ class App extends Component {
             <tr>
               <th>remaining</th>
               <td><Duration seconds={duration * (1 - played)} /></td>
-            </tr>
-            <tr>
-              <th>playedSeconds</th>
-              <td><Duration seconds={playedSeconds} /></td>
             </tr>
           </tbody></table>
         </section>
