@@ -79,6 +79,13 @@ export class Twitch extends Component {
   }
   setVolume (fraction) {
     this.callPlayer('setVolume', fraction)
+
+    // bug because mobile freaks out with volume
+    if (fraction = 0) {
+      this.callPlayer('setMuted', true)
+    } else {
+      this.callPlayer('setMuted', false)
+    }
   }
   getVolume () {
     const volume = this.callPlayer('getVolume');
