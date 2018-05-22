@@ -6,6 +6,8 @@ import { Streamable } from './Streamable'
 import { Wistia } from './Wistia'
 import { Twitch } from './Twitch'
 import { DailyMotion } from './DailyMotion'
+import { UstreamLive } from './UstreamLive'
+import { Iframe } from './Iframe'
 import { Mixcloud } from './Mixcloud'
 import { FilePlayer } from './FilePlayer'
 
