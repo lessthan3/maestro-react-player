@@ -16,6 +16,7 @@ export class Streamable extends Component {
   currentTime = null
   secondsLoaded = null
   load (url) {
+    console.log('wakka');
     getSDK(SDK_URL, SDK_GLOBAL).then(playerjs => {
       if (!this.iframe) return
       this.player = new playerjs.Player(this.iframe)
