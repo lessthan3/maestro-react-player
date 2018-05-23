@@ -100,6 +100,9 @@ export default class Player extends Component {
         if (this.player.getVolume) {
           progress.volume = this.player.getVolume();
         }
+        if (this.player.getMuted) {
+          progress.muted = this.player.getMuted();
+        }
         // Only call onProgress if values have changed
         if (progress.loaded !== this.prevLoaded || progress.playedSeconds !== this.playedSeconds) {
           this.props.onProgress(progress)
