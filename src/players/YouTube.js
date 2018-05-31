@@ -31,7 +31,7 @@ export class YouTube extends Component {
         height: '100%',
         videoId: id,
         playerVars: {
-          autoplay: playing ? 1 : 0,
+          autoplay: 0,
           mute: muted ? 1 : 0,
           controls: controls ? 1 : 0,
           start: parseStartTime(url),
@@ -57,17 +57,21 @@ export class YouTube extends Component {
     if (data === CUED) onReady()
   }
   play () {
+    console.log('play CALLED?!')
     this.callPlayer('playVideo')
   }
   pause () {
+    console.log('pause CALLED?!')
     this.callPlayer('pauseVideo')
   }
   stop () {
+    console.log('stop CALLED?!')
     if (!document.body.contains(this.callPlayer('getIframe'))) return
     this.callPlayer('stopVideo')
   }
   seekTo (amount) {
-    this.callPlayer('seekTo', amount)
+    console.log('seekTo CALLED?!')
+    //this.callPlayer('seekTo', amount)
   }
   setVolume (fraction) {
     this.callPlayer('setVolume', fraction * 100)

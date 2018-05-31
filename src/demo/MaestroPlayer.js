@@ -24,17 +24,7 @@ export default class MaestroPlayer extends React.Component {
         video: {
           offset: 102,
           spot: 'tv',
-          url: 'https://twitch.tv/monstercat'
-        },
-        ready: false
-      })
-    }, 2000)
-    setTimeout(() => {
-      this.setState({
-        video: {
-          offset: 102,
-          spot: 'tv',
-          url: 'https://twitch.tv/redbull'
+          url: 'https://www.youtube.com/watch?v=Ol26CnNEZrU'
         },
         ready: false
       })
@@ -95,7 +85,7 @@ export default class MaestroPlayer extends React.Component {
           onPause={this.onPause}
           onPlay={this.onPlay}
           onReady={this.onReady}
-          playing
+          playing={false}
           playsinline
           style={{
             left: 0,
