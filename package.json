@@ -109,7 +109,8 @@
   "dependencies": {
     "deepmerge": "^2.0.1",
     "load-script": "^1.0.0",
-    "prop-types": "^15.5.6"
+    "prop-types": "^15.5.6",
+    "vast-client": "^1.8.4"
   },
   "babel": {
     "presets": [

@@ -1,121 +1,204 @@
 import React, { Component } from 'react'
-import videojs from 'maestro-videojs-vast'
-import 'maestro-videojs-vast/dist/maestroVideoJsVast.css'
+import vast from 'vast-client'
 import { callPlayer } from '../utils'
 import createSinglePlayer from '../singlePlayer'
+import { FilePlayer } from './FilePlayer'
 
 const MATCH_URL = /^(https?:\/\/)?((bs\.serving-sys\.com)|(pubads\.g\.doubleclick\.net))/
-const PLACEHOLDER_VIDEO = 'https://storage.googleapis.com/maestro_video/blank.mp4'
 export class VAST extends Component {
   static displayName = 'VAST';
-
   static canPlay = url => MATCH_URL.test(url);
 
-  static loopOnEnded = false;
+  state = {
+    sources: [],
+    tracker: null
+  }
 
   callPlayer = callPlayer;
 
-  load (url) {
-    if (this.container) {
-      this.player = videojs(this.container, {
-        autoplay: false,
-        preload: false
-      })
-      this.player.ads()
-      this.player.vast({ url })
+  createSourceFiles (mediaFiles = []) {
+    return mediaFiles.reduce((arr, {fileURL: src, mimeType: type}) => {
+      return [...arr, {src, type}]
+    }, [])
+  }
 
-      const onAdStart = () => {
-        this.props.onDuration(this.getDuration())
-        this.props.onStart()
+  parseResponse (response) {
+    const {onEnded} = this.props
+    const {ads = []} = response
+
+    // find video creatives
+    // todo: handle companion ads
+    for (const ad of ads) {
+      const {creatives = []} = ad
+      for (const creative of creatives) {
+        const {mediaFiles = [], type} = creative
+        if (type === 'linear') {
+          const sources = this.createSourceFiles(mediaFiles)
+          if (sources.length) {
+            return this.setState({
+              sources,
+              tracker: new vast.tracker(ad, creative)
+            })
+          }
+        }
       }
 
-      const removeListeners = () => {
-        this.player.off('adsready', this.props.onReady)
-        this.player.off('adstart', onAdStart)
-        this.player.off('play', this.props.onPlay)
-        this.player.off('pause', this.props.onPause)
-        this.player.off('progress', this.props.onBuffer)
-        this.player.off('error', this.props.onError)
-        this.player.off('nopreroll', this.props.onEnded)
-        this.player.off('adtimeupdate', this.props.onProgress)
-      }
-
-      this.player.on('adsready', this.props.onReady)
-      this.player.on('adstart', onAdStart)
-      this.player.on('play', this.props.onPlay)
-      this.player.on('pause', this.props.onPause)
-      this.player.on('progress', this.props.onBuffer)
-      this.player.on('error', this.props.onError)
-      this.player.on('nopreroll', this.props.onEnded)
-      this.player.on('adtimeupdate', this.props.onProgress)
-      this.player.one('vast-adended', () => {
-        removeListeners()
-        this.props.onEnded()
-      })
-      if (this.props.playing) {
-        this.player.play()
-      }
+      // Inform ad server we can't find suitable media file for this ad
+      vast.util.track(ad.errorURLTemplates, { ERRORCODE: 403 })
+      onEnded()
     }
+  }
+
+  load (url) {
+    vast.client.get(url, { withCredentials: true }, (response, error) => {
+      if (error) {
+        return this.props.onError(error)
+      }
+      this.parseResponse(response)
+      const {tracker} = this.state
+      if (tracker) {
+        tracker.on('clickthrough', this.openAdLink)
+      }
+    })
   }
 
   // todo: add skip functionality
   skip () {}
 
   play () {
-    this.callPlayer('play')
+    this.container.play()
   }
 
   pause () {
-    this.callPlayer('pause')
+    this.container.pause()
   }
 
   stop () {
-    this.callPlayer('pause')
+    this.container.stop()
   }
 
-  seekTo (seconds) {}
+  // only allow rewind
+  seekTo (seconds) {
+    if (seconds < this.container.getCurrentTime()) {
+      this.container.seekTo(seconds)
+    }
+  }
 
   setVolume (fraction) {
-    this.callPlayer('volume', fraction)
+    this.container.setVolume(fraction)
   }
 
   mute = () => {
-    this.callPlayer('muted', true)
+    this.container.mute()
   };
 
   unmute = () => {
-    this.callPlayer('muted', false)
+    this.container.unmute()
   };
 
   getDuration () {
-    return this.callPlayer('duration')
+    return this.container.getDuration()
   }
 
   getCurrentTime () {
-    return this.callPlayer('currentTime')
+    return this.container.getCurrentTime()
   }
 
   getSecondsLoaded () {
-    const duration = this.callPlayer('duration')
-    const loaded = this.callPlayer('bufferedPercent')
-    return loaded * duration
+    return this.container.getSecondsLoaded()
   }
 
   ref = (container) => {
     this.container = container
   };
 
-  render () {
-    const style = {
-      ...this.props.style,
-      height: '100%',
-      width: '100%'
+  onAdClick = () => {
+    const {state: {tracker}} = this
+    tracker.click()
+  }
+
+  openAdLink (url) {
+    window.open(url, '_blank')
+  }
+
+  // track ended
+  onEnded = (event) => {
+    const {props: {onEnded}, state: {tracker}} = this
+    tracker.complete()
+    onEnded(event)
+  }
+
+  // track error
+  onError = (event) => {
+    const {props: {onError}, state: {tracker}} = this
+    vast.util.track(tracker.ad.errorURLTemplates, { ERRORCODE: 405 })
+    onError(event)
+  }
+
+  // track pause
+  onPause = (event) => {
+    const {props: {onPause}, state: {tracker}} = this
+    tracker.setPaused(true)
+    onPause(event)
+  }
+
+  // track play
+  onPlay = (event) => {
+    const {props: {onPlay}, state: {tracker}} = this
+    tracker.setPaused(false)
+    onPlay(event)
+  }
+
+  onProgress = (event) => {
+    const {props: {onProgress}, state: {tracker}} = this
+    tracker.setProgress(this.container.getCurrentTime())
+    onProgress(event)
+  }
+
+  // track load and duration
+  onReady = (event) => {
+    const {props: {onReady}, state: {tracker}} = this
+    tracker.load()
+    if (Number.isNaN(tracker.assetDuration)) {
+      tracker.assetDuration = this.container.getDuration()
     }
+    onReady(event)
+  }
+
+  // track volume change
+  onVolumeChange = (event) => {
+    const {props: {onVolumeChange}, state: {tracker}} = this
+    tracker.setMuted(this.container.muted)
+    onVolumeChange(event)
+  }
+
+  render () {
+    const {sources, tracker: clickTrackingURLTemplate} = this.state
+    const { width, height } = this.props
+    const wrapperStyle = {
+      cursor: clickTrackingURLTemplate ? 'pointer' : 'default'
+    }
+    const videoStyle = {
+      width: width === 'auto' ? width : '100%',
+      height: height === 'auto' ? height : '100%'
+    }
+    if (!sources.length) return null
+
     return (
-      <div data-vjs-player style={style}>
-        <video ref={this.ref} className='video-js'>
-          <source src={PLACEHOLDER_VIDEO} type='video/mp4' />
-        </video>
+      <div onClick={this.onAdClick} style={wrapperStyle}>
+        <FilePlayer
+          {...this.props}
+          onEnded={this.onEnded}
+          onError={this.onError}
+          onPause={this.onPause}
+          onPlay={this.onPlay}
+          onProgress={this.onProgress}
+          onReady={this.onReady}
+          onVolumeChange={this.onVolumeChange}
+          ref={this.ref}
+          style={videoStyle}
+          url={this.state.sources[0].src}
+        />
       </div>
     )
   }
