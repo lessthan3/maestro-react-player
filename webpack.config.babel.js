@@ -11,6 +11,7 @@ const PATH_DEMO = join(__dirname, 'demo')
 const PATH_SRC = join(__dirname, 'src')
 const PATH_INDEX = join(__dirname, 'index.html')
 const PATH_TESTS = join(__dirname, 'test', 'specs')
+const VIDEOJS_VAST = join(__dirname, 'node_modules', 'maestro-videojs-vast', 'dist')
 
 export const plugins = [
   new HtmlWebpackPlugin({
@@ -34,7 +35,12 @@ export default {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        include: [ PATH_SRC, PATH_TESTS ]
+        include: [PATH_SRC, PATH_TESTS, VIDEOJS_VAST]
+      },
+      {
+        test: /\.(eot|woff|woff2|svg|ttf)([\?]?.*)$/,
+        loader: 'file-loader',
+        include: [VIDEOJS_VAST]
       },
       {
         test: /\.css$/,
@@ -43,7 +49,7 @@ export default {
           'css-loader?sourceMap',
           'postcss-loader?sourceMap'
         ]),
-        include: PATH_SRC
+        include: [PATH_SRC, VIDEOJS_VAST]
       }
     ]
   },
