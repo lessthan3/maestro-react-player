@@ -49,12 +49,15 @@ export default class MaestroPlayer extends React.Component {
 
   // player methods
   ref = (player) => {
+    console.log(player, 'PLAYER')
     this.player = player
     this.playerz = '1'
   };
 
   // inital sync on Ready
   onReady = () => {
+    console.log('NO READY FIRED', '123')
+    console.log(this.player, 'rrr', this.playerz)
     const { video } = this.state
     this.player.seekTo(video.offset)
     this.setState({
@@ -81,6 +84,7 @@ export default class MaestroPlayer extends React.Component {
 
   render () {
     const { ready, video } = this.state
+    console.log(video, ready, 'STATE')
     return (
       <React.Fragment>
         { video && <ReactPlayer
