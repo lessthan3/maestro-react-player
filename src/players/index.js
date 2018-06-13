@@ -23,7 +23,7 @@ export default [
   DailyMotion,
   Mixcloud,
   UstreamLive,
-  FilePlayer,
-  Iframe,
   VAST,
-];
+  FilePlayer,
+  Iframe
+]

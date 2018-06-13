@@ -14,7 +14,6 @@
     "build:demo": "cross-env NODE_ENV=production webpack --config webpack.demo.babel.js",
     "build:dist": "cross-env NODE_ENV=production webpack --config webpack.dist.babel.js",
     "build:standalone": "cross-env NODE_ENV=production webpack --config webpack.standalone.babel.js",
-    "open": "open ./demo/index.html",
     "preversion": "npm run lint",
     "version": "auto-changelog -p && npm run build:dist && npm run build:standalone && git add CHANGELOG.md dist",
     "prepublishOnly": "npm run build:lib && npm run build:dist",
@@ -85,9 +84,9 @@
     "karma-mocha-reporter": "^2.2.0",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.9",
+    "maestro-videojs-vast": "0.0.6-alpha",
     "mocha": "^4.1.0",
     "node-sass": "^4.9.0",
-    "open": "0.0.5",
     "postcss-automath": "^1.0.1",
     "postcss-loader": "^2.0.10",
     "postcss-nested": "^3.0.0",
@@ -110,7 +109,6 @@
   "dependencies": {
     "deepmerge": "^2.0.1",
     "load-script": "^1.0.0",
-    "maestro-videojs-vast": "0.0.6-alpha",
     "prop-types": "^15.5.6"
   },
   "babel": {
