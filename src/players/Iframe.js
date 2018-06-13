@@ -3,18 +3,20 @@ import React, { Component } from 'react'
 import { randomString } from '../utils'
 import createSinglePlayer from '../singlePlayer'
 
-const MATCH_URL = /^(https?:\/\/)?([\da-z\\.-]+)\.([a-z\\.]{2,6})([\\/\w \\.-]*)*\/?$/
 const PLAYER_ID_PREFIX = 'Iframe-player-'
 export class Iframe extends Component {
   static displayName = 'Iframe';
-  static canPlay = url => MATCH_URL.test(url);
+  static canPlay = url => true
   playerID = PLAYER_ID_PREFIX + randomString()
   player = {
     currentTime: 0
   }
   load (url) {
-    if (!this.container) return
-    setTimeout(() => this.props.onReady(), 3000)
+    if (!this.container) {
+      this.props.onReady()
+    } else {
+      setTimeout(() => this.props.onReady(), 3000)
+    }
   }
   play () {
     this.playTime = Date.now()
