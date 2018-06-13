@@ -106,11 +106,12 @@ export default class Player extends Component {
         // Only call onProgress if values have changed
 
         if (progress.loaded !== this.prevLoaded || progress.playedSeconds !== this.playedSeconds) {
-          this.props.onProgress(progress)
 
           // need to send progress to VAST player
           if (this.props.activePlayer.displayName === 'VAST') {
             this.player.onProgress(progress);
+          } else {
+            this.props.onProgress(progress)
           }
         }
         this.prevPlayed = progress.played

@@ -24,21 +24,11 @@ export default class MaestroPlayer extends React.Component {
         video: {
           offset: 102,
           spot: 'tv',
-          url: 'https://twitch.tv/monstercat'
+          url: 'https://bs.serving-sys.com/Serving?cn=display&c=23&pl=VAST&pli=25235872&PluID=0&pos=7996&ord=%5Btimestamp%5D&cim=1'
         },
         ready: false
       })
     }, 2000)
-    setTimeout(() => {
-      this.setState({
-        video: {
-          offset: 102,
-          spot: 'tv',
-          url: 'https://twitch.tv/redbull'
-        },
-        ready: false
-      })
-    }, 1000)
   }
   // End Player Controls
   componentWillUpdate (nextProps) {
