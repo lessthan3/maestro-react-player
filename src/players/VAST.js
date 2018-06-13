@@ -4,7 +4,7 @@ import { callPlayer } from '../utils'
 import createSinglePlayer from '../singlePlayer'
 import { FilePlayer } from './FilePlayer'
 
-const MATCH_URL = /^(https?:\/\/)?((bs\.serving-sys\.com)|(pubads\.g\.doubleclick\.net))/
+const MATCH_URL = /^(https?:\/\/)?((bs\.serving-sys\.com)|(pubads\.g\.doubleclick\.net))/i
 export class VAST extends Component {
   static displayName = 'VAST';
   static canPlay = url => MATCH_URL.test(url);
@@ -17,9 +17,7 @@ export class VAST extends Component {
   callPlayer = callPlayer;
 
   createSourceFiles (mediaFiles = []) {
-    return mediaFiles.reduce((arr, {fileURL: src, mimeType: type}) => {
-      return [...arr, {src, type}]
-    }, [])
+    return mediaFiles.map(({fileURL: src, mimeType: type}) => ({src, type}))
   }
 
   parseResponse (response) {
@@ -186,9 +184,7 @@ export class VAST extends Component {
       width: width === 'auto' ? width : '100%',
       height: height === 'auto' ? height : '100%'
     }
-    if (!sources.length) return null
-
-    return (
+    return sources.length ? (
       <div onClick={this.onAdClick} style={wrapperStyle}>
         <FilePlayer
           {...this.props}
@@ -204,7 +200,8 @@ export class VAST extends Component {
           url={this.state.sources[0].src}
         />
       </div>
-    )
+    ) : null;
+
   }
 }
 
