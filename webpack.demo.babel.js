@@ -12,7 +12,7 @@ export const minifyPlugins = [
     sourceMap: true,
     comments: false,
     mangle: {
-      except: ['ReactPlayer', 'maestro-videojs-vast']
+      except: [ 'ReactPlayer' ]
     }
   }),
   new webpack.LoaderOptionsPlugin({ minimize: true })
