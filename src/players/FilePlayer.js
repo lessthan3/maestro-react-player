@@ -61,11 +61,10 @@ export class FilePlayer extends Component {
     this.removeListeners()
   }
   addListeners () {
-    const { onReady, onPlay, onPause, onEnded, onVolumeChange, onProgress, onError, playsinline } = this.props
+    const { onReady, onPlay, onPause, onEnded, onVolumeChange, onError, playsinline } = this.props
     this.player.addEventListener('canplay', onReady)
     this.player.addEventListener('play', onPlay)
     this.player.addEventListener('pause', onPause)
-    this.player.addEventListener('timeupdate', onProgress)
     this.player.addEventListener('seeked', this.onSeek)
     this.player.addEventListener('ended', onEnded)
     this.player.addEventListener('error', onError)
@@ -76,11 +75,10 @@ export class FilePlayer extends Component {
     }
   }
   removeListeners () {
-    const { onReady, onPlay, onPause, onEnded, onVolumeChange, onProgress, onError } = this.props
+    const { onReady, onPlay, onPause, onEnded, onVolumeChange, onError } = this.props
     this.player.removeEventListener('canplay', onReady)
     this.player.removeEventListener('play', onPlay)
     this.player.removeEventListener('pause', onPause)
-    this.player.removeEventListener('timeupdate', onProgress)
     this.player.removeEventListener('seeked', this.onSeek)
     this.player.removeEventListener('ended', onEnded)
     this.player.removeEventListener('error', onError)

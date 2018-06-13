@@ -63,7 +63,11 @@ export class VAST extends Component {
   }
 
   // todo: add skip functionality
-  skip () {}
+  skip () {
+    const {props: {onEnded}, state: {tracker}} = this
+    tracker.skip()
+    onEnded()
+  }
 
   play () {
     this.container.play()
@@ -151,7 +155,7 @@ export class VAST extends Component {
 
   onProgress = (event) => {
     const {props: {onProgress}, state: {tracker}} = this
-    tracker.setProgress(this.container.getCurrentTime())
+    tracker.setProgress(event.playedSeconds)
     onProgress(event)
   }
 
