@@ -43,7 +43,7 @@ export class VAST extends Component {
 
       // Inform ad server we can't find suitable media file for this ad
       vast.util.track(ad.errorURLTemplates, { ERRORCODE: 403 })
-      onEnded()
+      return onEnded()
     }
   }
 
