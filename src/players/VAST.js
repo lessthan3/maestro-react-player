@@ -17,7 +17,7 @@ export class VAST extends Component {
   callPlayer = callPlayer;
 
   createSourceFiles (mediaFiles = []) {
-    return mediaFiles.map(({fileURL: src, mimeType: type}) => ({src, type}))
+    return mediaFiles.map(({fileURL: src, mimeType: type} = {}) => ({src, type}))
   }
 
   parseResponse (response) {
