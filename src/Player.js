@@ -109,7 +109,7 @@ export default class Player extends Component {
 
           // need to send progress to VAST player
           if (this.props.activePlayer.displayName === 'VAST') {
-            this.player.onProgress(progress);
+            this.player.onProgress(progress)
           } else {
             this.props.onProgress(progress)
           }
