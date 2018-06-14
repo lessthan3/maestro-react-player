@@ -4,7 +4,7 @@ import { callPlayer } from '../utils'
 import createSinglePlayer from '../singlePlayer'
 import { FilePlayer } from './FilePlayer'
 
-const MATCH_URL = /^(https?:\/\/)?((bs\.serving-sys\.com)|(pubads\.g\.doubleclick\.net))/i
+const MATCH_URL = /^VAST:https:\/\//i
 export class VAST extends Component {
   static displayName = 'VAST';
   static canPlay = url => MATCH_URL.test(url);
@@ -48,7 +48,7 @@ export class VAST extends Component {
   }
 
   load (url) {
-    vast.client.get(url, { withCredentials: true }, (response, error) => {
+    vast.client.get(url.slice('VAST:'.length), { withCredentials: true }, (response, error) => {
       if (error) {
         return this.props.onError(error)
       }

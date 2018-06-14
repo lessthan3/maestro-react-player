@@ -284,7 +284,7 @@ class App extends Component {
             <tr>
               <th>VAST</th>
               <td>
-                {this.renderLoadButton('https://bs.serving-sys.com/Serving?cn=display&c=23&pl=VAST&pli=25235872&PluID=0&pos=7996&ord=%5Btimestamp%5D&cim=1', 'Test A')}
+                {this.renderLoadButton('VAST:https://bs.serving-sys.com/Serving?cn=display&c=23&pl=VAST&pli=25235872&PluID=0&pos=7996&ord=%5Btimestamp%5D&cim=1', 'Test A')}
               </td>
             </tr>
             <tr>

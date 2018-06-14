@@ -24,7 +24,7 @@ export default class MaestroPlayer extends React.Component {
         video: {
           offset: 102,
           spot: 'tv',
-          url: 'https://bs.serving-sys.com/Serving?cn=display&c=23&pl=VAST&pli=25235872&PluID=0&pos=7996&ord=%5Btimestamp%5D&cim=1'
+          url: 'VAST:https://bs.serving-sys.com/Serving?cn=display&c=23&pl=VAST&pli=25235872&PluID=0&pos=7996&ord=%5Btimestamp%5D&cim=1'
         },
         ready: false
       })

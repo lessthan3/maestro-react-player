@@ -5,4 +5,4 @@ import App from './App'
 
 const container = document.getElementById('app')
 
-render(<MaestroPlayer />, container)
+render(<App />, container)
