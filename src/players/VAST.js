@@ -65,7 +65,9 @@ export class VAST extends Component {
   // todo: add skip functionality
   skip () {
     const {props: {onEnded}, state: {tracker}} = this
-    tracker?.skip()
+    if (tracker) {
+      tracker.skip()
+    }
     onEnded()
   }
 
@@ -128,7 +130,9 @@ export class VAST extends Component {
   // track ended
   onEnded = (event) => {
     const {props: {onEnded}, state: {tracker}} = this
-    tracker?.complete()
+    if (tracker) {
+      tracker.complete()
+    }
     onEnded(event)
   }
 
