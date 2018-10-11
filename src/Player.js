@@ -33,11 +33,12 @@ export default class Player extends Component {
     // Invoke player methods based on incoming props
     const { url, playing, volume, muted, playbackRate } = this.props
     if (url !== nextProps.url) {
-      if (this.isLoading) {
-        console.warn(`ReactPlayer: the attempt to load ${nextProps.url} is being deferred until the player has loaded`)
-        this.loadOnReady = nextProps.url
-        return
-      }
+      // This could potentially be bad.  Need to find out why twitch onReady event isn't firing or triggering callback
+      // if (this.isLoading) {
+      //   console.warn(`ReactPlayer: the attempt to load ${nextProps.url} is being deferred until the player has loaded`)
+      //   this.loadOnReady = nextProps.url
+      //   return
+      // }
       this.isLoading = true
       this.startOnPlay = true
       this.onDurationCalled = false
