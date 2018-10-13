@@ -35,7 +35,7 @@ export class Twitch extends Component {
         height: '100%',
         width: '100%',
         playsinline: playsinline,
-        autoplay: this.props.playing,
+        autoplay: true,
         muted: this.props.muted,
         ...config.twitch.options
       })
