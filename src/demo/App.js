@@ -21,7 +21,7 @@ const MULTIPLE_SOURCES = [
 class App extends Component {
   state = {
     url: null,
-    playing: true,
+    playing: false,
     volume: 0.8,
     muted: false,
     played: 0,
@@ -56,11 +56,11 @@ class App extends Component {
     this.setState({ playbackRate: parseFloat(e.target.value) })
   }
   onPlay = () => {
-    console.log('onPlay')
+    // console.log('onPlay')
     this.setState({ playing: true })
   }
   onPause = () => {
-    console.log('onPause')
+    // console.log('onPause')
     this.setState({ playing: false })
   }
   onSeekMouseDown = e => {
@@ -81,11 +81,11 @@ class App extends Component {
     }
   }
   onEnded = () => {
-    console.log('onEnded')
+    // console.log('onEnded')
     this.setState({ playing: this.state.loop })
   }
   onDuration = (duration) => {
-    console.log('onDuration', duration)
+    // console.log('onDuration', duration)
     this.setState({ duration })
   }
   onClickFullscreen = () => {
@@ -121,14 +121,9 @@ class App extends Component {
               playbackRate={playbackRate}
               volume={volume}
               muted={muted}
-              onReady={() => console.log('onReady')}
-              onStart={() => console.log('onStart')}
               onPlay={this.onPlay}
               onPause={this.onPause}
-              onBuffer={() => console.log('onBuffer')}
-              onSeek={e => console.log('onSeek', e)}
               onEnded={this.onEnded}
-              onError={e => console.log('onError', e)}
               onProgress={this.onProgress}
               onDuration={this.onDuration}
             />
@@ -223,6 +218,8 @@ class App extends Component {
             <tr>
               <th>Twitch</th>
               <td>
+                {/* {this.renderLoadButton('https://www.twitch.tv/food', 'Test A')}
+                {this.renderLoadButton('https://www.twitch.tv/monstercat', 'Test B')} */}
                 {this.renderLoadButton('https://www.twitch.tv/videos/106400740', 'Test A')}
                 {this.renderLoadButton('https://www.twitch.tv/videos/12783852', 'Test B')}
                 {this.renderLoadButton('https://www.twitch.tv/kronovi', 'Test C')}

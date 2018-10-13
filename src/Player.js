@@ -33,14 +33,19 @@ export default class Player extends Component {
     // Invoke player methods based on incoming props
     const { url, playing, volume, muted, playbackRate } = this.props
     if (url !== nextProps.url) {
+      console.log('willRecieveProps isloading', this.isLoading);
       if (this.isLoading) {
         console.warn(`ReactPlayer: the attempt to load ${nextProps.url} is being deferred until the player has loaded`)
         this.loadOnReady = nextProps.url
         return
       }
+      console.log('willRecieveProps setting isLoading to true');
       this.isLoading = true
       this.startOnPlay = true
       this.onDurationCalled = false
+      console.log('this.isReady', this.isReady);
+      console.log('nextProps.url', nextProps.url);
+
       this.player.load(nextProps.url, this.isReady)
     }
     if (!playing && nextProps.playing && !this.isPlaying) {
@@ -144,6 +149,7 @@ export default class Player extends Component {
   onReady = () => {
     if (!this.mounted) return
     this.isReady = true
+    console.log('onReady set isLoading to false');
     this.isLoading = false
     const { onReady, playing, volume, muted } = this.props
     onReady()
@@ -160,6 +166,7 @@ export default class Player extends Component {
   }
   onPlay = () => {
     this.isPlaying = true
+    console.log('onPlay set isloading false');
     this.isLoading = false
     const { onStart, onPlay, playbackRate } = this.props
     if (this.startOnPlay) {
@@ -178,7 +185,9 @@ export default class Player extends Component {
   }
   onPause = (e) => {
     this.isPlaying = false
+    console.log('onPause isloading', this.isLoading);
     if (!this.isLoading) {
+      console.log('calling onPause');
       this.props.onPause(e)
     }
   }
@@ -211,6 +220,8 @@ export default class Player extends Component {
   }
   render () {
     const Player = this.props.activePlayer
+    console.log('this.props', this.props);
+
     return (
       <Player
         {...this.props}

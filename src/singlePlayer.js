@@ -14,6 +14,7 @@ export default function createSinglePlayer (activePlayer) {
     static canPlay = activePlayer.canPlay
 
     shouldComponentUpdate (nextProps) {
+      console.log('shouldComponentUpdate', !isEqual(this.props, nextProps))
       return !isEqual(this.props, nextProps)
     }
     componentWillUpdate (nextProps) {

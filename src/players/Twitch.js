@@ -28,7 +28,25 @@ export class Twitch extends Component {
       }
       return
     }
+    const foo = () => {
+      console.log('TWITCH PLAYER READY FIRED');
+      this.props.onReady();
+    }
+    const bar = () => {
+      console.log('TWITCH PLAYER PLAY FIRED');
+      this.props.onPlay();
+    }
+    const biz = () => {
+      console.log('TWITCH PLAYER PAUSE FIRED');
+      this.props.onPause();
+    }
+    const baz = () => {
+      console.log('TWITCH PLAYER ENDED FIRED');
+      this.props.onEnded();
+    }
     getSDK(SDK_URL, SDK_GLOBAL).then(Twitch => {
+      console.log('this.props.playing', this.props.playing);
+
       this.player = new Twitch.Player(this.playerID, {
         video: isChannel ? '' : id,
         channel: isChannel ? id : '',
@@ -40,10 +58,10 @@ export class Twitch extends Component {
         ...config.twitch.options
       })
       const { READY, PLAY, PAUSE, ENDED } = Twitch.Player
-      this.player.addEventListener(READY, this.props.onReady)
-      this.player.addEventListener(PLAY, this.props.onPlay)
-      this.player.addEventListener(PAUSE, this.props.onPause)
-      this.player.addEventListener(ENDED, this.props.onEnded)
+      this.player.addEventListener(READY, foo)
+      this.player.addEventListener(PLAY, bar)
+      this.player.addEventListener(PAUSE, biz)
+      this.player.addEventListener(ENDED, baz)
     }, onError)
   }
   play () {
