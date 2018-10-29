@@ -27,23 +27,24 @@ export class FaceMask extends Component {
         initialVideo: { url }
       })
       const { PLAYER_READY, STATUS, TIME_UPDATE, VOLUME } = nfl.playaction.EVENTS
+      const { COMPLETE, ERROR, PAUSED, PLAYING } = nfl.playaction.STATUS
       this.player.on(PLAYER_READY, this.props.onReady)
       this.player.on(VOLUME, this.props.onVolumeChange)
       this.player.on(STATUS, (e) => {
         switch (e.status) {
-          case 'COMPLETE': {
+          case COMPLETE: {
             this.props.onEnded()
             break
           }
-          case 'ERROR': {
+          case ERROR: {
             this.props.onError(e)
             break
           }
-          case 'PAUSED': {
+          case PAUSED: {
             this.props.onPause()
             break
           }
-          case 'PLAYING': {
+          case PLAYING: {
             this.props.onPlay()
             break
           }
