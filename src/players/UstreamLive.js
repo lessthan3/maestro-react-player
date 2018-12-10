@@ -9,7 +9,7 @@ const MATCH_URL = /(ustream.tv\/channel\/)([^#&?/]*)/
 const PLAYER_ID_PREFIX = 'UstreamLive-player-'
 export class UstreamLive extends Component {
   static displayName = 'UstreamLive';
-  static canPlay = url => MATCH_URL.test(url);
+  static canPlay = url => MATCH_URL.test(url)
   static loopOnEnded = false;
 
   playerID = PLAYER_ID_PREFIX + randomString()
@@ -19,32 +19,34 @@ export class UstreamLive extends Component {
     const m = url.match(MATCH_URL)
     return m[2]
   }
-  load (url) {
+  load () {
+    const {onEnded, onError, onPause, onPlay, onReady, playing} = this.props
     getSDK(SDK_URL, SDK_GLOBAL).then(UstreamEmbed => {
       if (!this.container) return
       this.player = UstreamEmbed(this.playerID)
       this.player.currentTime = 0
+      this.player.autoplay = playing
       this.player.addListener('playing', (type, playing) => {
         if (playing) {
           this.playTime = Date.now()
-          this.props.onPlay()
+          onPlay()
         } else {
           this.player.currentTime = this.getCurrentTime()
           this.playTime = null
-          this.props.onPause()
+          onPause()
         }
       })
       this.player.addListener('live', () => {
-        this.props.onReady()
+        onReady()
       })
       this.player.addListener('offline', () => {
-        this.props.onReady()
+        onReady()
       })
-      this.player.addListener('finished', this.props.onEnded)
+      this.player.addListener('finished', onEnded)
       this.player.getProperty('duration', (duration) => {
         this.player.duration = duration || Infinity
       })
-    }, this.props.onError)
+    }, onError)
   }
   // todo
   mute = () => {}
@@ -73,7 +75,6 @@ export class UstreamLive extends Component {
     if (this.playTime) {
       playing = (Date.now() - this.playTime) / 1000
     }
-
     return this.player.currentTime + playing
   }
   getSecondsLoaded () {
