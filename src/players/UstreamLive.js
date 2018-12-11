@@ -52,14 +52,8 @@ export class UstreamLive extends Component {
           onPause()
         }
       })
-      this.player.addListener('live', () => {
-        console.log('live')
-        onReady()
-      })
-      this.player.addListener('offline', () => {
-        console.log('oflfine')
-        onReady()
-      })
+      this.player.addListener('live', onReady)
+      this.player.addListener('offline', onReady)
       this.player.addListener('finished', onEnded)
       this.player.getProperty('duration', (duration) => {
         this.player.duration = duration || Infinity
