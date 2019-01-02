@@ -108,7 +108,7 @@ export class FilePlayer extends Component {
         this.hls = new Hls(this.props.config.file.hlsOptions)
         this.hls.on(Hls.Events.ERROR, (e, data) => {
           // Errors listed here: https://github.com/video-dev/hls.js/blob/1671c9161e93b4e6a2532bd3a42b59127000a26c/docs/API.md#media-errors
-          // We're only going to pass through fatal errors.
+          // We're only going to pass along fatal errors.
           if (data.fatal) {
             this.props.onError(e, data, this.hls, Hls)
           }
