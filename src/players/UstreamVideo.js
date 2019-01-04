@@ -40,14 +40,15 @@ export class UstreamVideo extends Component {
   }
 
   // there's no events to update progress and duration,
-  // so we're going to set an interval here
+  // so we're going to set an interval here. Also, duration
+  // is zero or null for the first few seconds. Couldn't find
+  // a deterministic event to let us know when we should grab the duration.
   initInterval () {
     if (this.currentTimeInterval) {
       return
     }
     this.currentTimeInterval = setInterval(() => {
       if (this.player) {
-        console.log('updating', new Date())
         this.player.getProperty('progress', (progress) => {
           this.player.currentTime = progress
         })
