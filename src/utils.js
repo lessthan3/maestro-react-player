@@ -124,6 +124,7 @@ export function callPlayer (method, ...args) {
     console.warn(message, 'font-weight: bold', '')
     return null
   }
+  console.log('calling method: ', method)
   return this.player[method](...args)
 }
 

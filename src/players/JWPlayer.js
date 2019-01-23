@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import { callPlayer, getSDK, randomString } from '../utils'
 import createSinglePlayer from '../singlePlayer'
 
-const SDK_URL = '//content.jwplatform.com/libraries/2NA3bgRi.js'
+const SDK_URL = '//cdn.jwplayer.com/libraries/8DNY8ff0.js'
 const SDK_GLOBAL = 'jwplayer'
 // TODO comment back in, figure out all cases
 const MATCH_VIDEO_URL = /jwplayer/;
@@ -24,18 +24,25 @@ export class JWPlayer extends Component {
       this.player.setup({
         file: url,
       })
+    } else {
+      getSDK(SDK_URL, SDK_GLOBAL).then(jwplayer => {
+        console.log('jwplayer  in get sdk', jwplayer );
+        this.player = jwplayer(this.playerID).setup({
+          file: url,
+        });
+        this.player.on("ready", this.props.onReady);
+        this.player.on("play", this.props.onPlay);
+        this.player.on("pause", this.props.onPause);
+        this.player.on("error", onError);
+        // on seek?
+        // on volume?
+        // const { READY, PLAY, PAUSE, ENDED } = Twitch.Player
+        // this.player.addEventListener(READY, this.props.onReady)
+        // this.player.addEventListener(PLAY, this.props.onPlay)
+        // this.player.addEventListener(PAUSE, this.props.onPause)
+        // this.player.addEventListener(ENDED, this.props.onEnded)
+      }, onError)
     }
-    getSDK(SDK_URL, SDK_GLOBAL).then(jwplayer => {
-      console.log('jwplayer  in get sdk', jwplayer );
-      this.player = jwplayer(this.playerID).setup({
-        file: url,
-      });
-      // const { READY, PLAY, PAUSE, ENDED } = Twitch.Player
-      // this.player.addEventListener(READY, this.props.onReady)
-      // this.player.addEventListener(PLAY, this.props.onPlay)
-      // this.player.addEventListener(PAUSE, this.props.onPause)
-      // this.player.addEventListener(ENDED, this.props.onEnded)
-    }, onError)
   }
   play () {
     this.callPlayer('play')
@@ -44,7 +51,7 @@ export class JWPlayer extends Component {
     this.callPlayer('pause')
   }
   stop () {
-    this.callPlayer('pause')
+    this.callPlayer('stop')
   }
   seekTo (seconds) {
     this.callPlayer('seek', seconds)
@@ -53,7 +60,7 @@ export class JWPlayer extends Component {
     return this.callPlayer('getVolume')
   }
   getMuted () {
-    return this.callPlayer('getMuted')
+    return this.callPlayer('getMute')
   }
   setVolume (fraction) {
     this.callPlayer('setVolume', fraction)
