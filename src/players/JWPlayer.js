@@ -5,7 +5,7 @@ import createSinglePlayer from '../singlePlayer'
 
 const SDK_URL = '//cdn.jwplayer.com/libraries/8DNY8ff0.js'
 const SDK_GLOBAL = 'jwplayer'
-// TODO comment back in, figure out all cases
+// TODO: figure out all cases
 const MATCH_VIDEO_URL = /jwplayer/;
 const PLAYER_ID_PREFIX = 'jw-player-'
 
@@ -18,15 +18,12 @@ export class JWPlayer extends Component {
   playerID = PLAYER_ID_PREFIX + randomString()
   load (url, isReady) {
     const { playsinline, onError, config } = this.props
-    // const isChannel = MATCH_CHANNEL_URL.test(url)
-    // const id = isChannel ? url.match(MATCH_CHANNEL_URL)[1] : url.match(MATCH_VIDEO_URL)[1]
     if (isReady) {
       this.player.setup({
         file: url,
       })
     } else {
       getSDK(SDK_URL, SDK_GLOBAL).then(jwplayer => {
-        console.log('jwplayer  in get sdk', jwplayer );
         this.player = jwplayer(this.playerID).setup({
           file: url,
         });
@@ -34,13 +31,6 @@ export class JWPlayer extends Component {
         this.player.on("play", this.props.onPlay);
         this.player.on("pause", this.props.onPause);
         this.player.on("error", onError);
-        // on seek?
-        // on volume?
-        // const { READY, PLAY, PAUSE, ENDED } = Twitch.Player
-        // this.player.addEventListener(READY, this.props.onReady)
-        // this.player.addEventListener(PLAY, this.props.onPlay)
-        // this.player.addEventListener(PAUSE, this.props.onPause)
-        // this.player.addEventListener(ENDED, this.props.onEnded)
       }, onError)
     }
   }
@@ -84,7 +74,6 @@ export class JWPlayer extends Component {
     return null
   }
   render () {
-    console.log('rendering');
     const style = {
       width: '100%',
       height: '100%'
