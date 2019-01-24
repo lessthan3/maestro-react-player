@@ -44,6 +44,9 @@ export class JWPlayer extends Component {
       }, onError)
     }
   }
+  handleUnmount() {
+    this.callPlayer('remove');
+  }
   play () {
     this.callPlayer('play')
   }
