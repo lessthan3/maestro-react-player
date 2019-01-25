@@ -50,14 +50,13 @@ export class JWPlayer extends Component {
     this.callPlayer('seek', seconds)
   }
   getVolume () {
-    return this.callPlayer('getVolume')
+    return this.callPlayer('getVolume') / 100;
   }
   getMuted () {
     return this.callPlayer('getMute')
   }
   setVolume (fraction) {
-    console.log('setVolume (fraction): ', fraction)
-    this.callPlayer('setVolume', fraction)
+    this.callPlayer('setVolume', fraction * 100)
   }
   mute = () => {
     this.callPlayer('setMute', true)
