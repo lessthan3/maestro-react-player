@@ -75,14 +75,13 @@ export class Livestream extends Component {
       height: '100%'
     }
     const { url, playing } = this.props
-    const livestreamUrlOverride = `${url}/player`
 
     if (playing) {
       return (
         <iframe
           id={this.playerID}
           ref={this.ref}
-          src={playing && livestreamUrlOverride }
+          src={playing && url}
           frameBorder='0'
           scrolling='no'
           style={style}
