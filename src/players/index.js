@@ -13,8 +13,8 @@ import { Iframe } from './Iframe'
 import { Mixcloud } from './Mixcloud'
 import { FilePlayer } from './FilePlayer'
 import { VAST } from './VAST'
-import { JWPlayer } from './JWPlayer';
-import { PhenixPlayer } from './PhenixPlayer';
+import { JWPlayer } from './JWPlayer'
+import { PhenixPlayer } from './PhenixPlayer'
 
 export default [
   PhenixPlayer,

@@ -27,7 +27,7 @@ export class PhenixPlayer extends Component {
 
   playerRef = (player) => {
     if (player === this.player) {
-      return;
+      return
     }
     if (this.player) {
       this.removeListeners()
@@ -45,8 +45,8 @@ export class PhenixPlayer extends Component {
       this.player = null
     }
     if (this.channelExpress) {
-      this.channelExpress.dispose();
-      this.channelExpress = null;
+      this.channelExpress.dispose()
+      this.channelExpress = null
     }
   }
 
@@ -95,22 +95,22 @@ export class PhenixPlayer extends Component {
   }
 
   load (url) {
-    const backendUri = this.getPhenixBackendUri(url);
-    const channelId = this.getPhenixChannelId(url);
-    const authenticationData = this.getPhenixAuthenticationData(url);
+    const backendUri = this.getPhenixBackendUri(url)
+    const channelId = this.getPhenixChannelId(url)
+    const authenticationData = this.getPhenixAuthenticationData(url)
 
     const joinChannelCallback = (err, response) => {
-      const success = !err && response.status === 'ok';
+      const success = !err && response.status === 'ok'
       if (!success) {
-        const error = err || new Error(`Response status: ${response.status}`);
+        const error = err || new Error(`Response status: ${response.status}`)
         this.props.onError(error)
       }
     }
 
     const subscriberCallback = (err, response) => {
-      const success = !err && ['ok', 'no-stream-playing'].includes(response.status);
+      const success = !err && ['ok', 'no-stream-playing'].includes(response.status)
       if (!success) {
-        const error = err || new Error(`Response status: ${response.status}`);
+        const error = err || new Error(`Response status: ${response.status}`)
         this.props.onError(error)
       }
       // otherwise, response.mediaStream.getStreamId() will be a thing
@@ -119,7 +119,7 @@ export class PhenixPlayer extends Component {
     getPhenixSdk().then((phenix) => {
       // TODO: Does this check do anything?
       if (url !== this.props.url) {
-        return;
+        return
       }
       if (this.channelExpress) {
         this.channelExpress.dispose()
@@ -127,15 +127,15 @@ export class PhenixPlayer extends Component {
       }
       this.channelExpress = new phenix.express.ChannelExpress({
         authenticationData,
-        backendUri,
+        backendUri
       })
       this.channelExpress.joinChannel(
         {
           channelId,
-          videoElement: this.player,
+          videoElement: this.player
         },
         joinChannelCallback,
-        subscriberCallback,
+        subscriberCallback
       )
     })
   }
