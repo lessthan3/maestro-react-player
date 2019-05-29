@@ -26,6 +26,7 @@ export class Twitch extends Component {
       } else {
         this.player.setVideo('v' + id)
       }
+      this.player.setAutoplay(true);
       return
     }
     getSDK(SDK_URL, SDK_GLOBAL).then(Twitch => {
