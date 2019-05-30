@@ -128,7 +128,9 @@ export const defaultProps = {
       forceAudio: false,
       forceHLS: false,
       forceDASH: false,
-      hlsOptions: {}
+      hlsOptions: {},
+      hlsVersion: '0.10.1',
+      dashOptions: '2.9.2'
     },
     wistia: {
       options: {}
