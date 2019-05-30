@@ -19,6 +19,7 @@
     "prepublishOnly": "npm run build:lib && npm run build:dist",
     "postpublish": "npm run clean",
     "format": "standard --fix --verbose | snazzy",
+    "server": "node test-server/index.js",
     "mtm": "npm run prepublishOnly && rsync -r ./dist ../maestro-web/node_modules/maestro-react-player && rsync -r ./lib ../maestro-web/node_modules/maestro-react-player",
     "watch": "nodemon"
   },
@@ -97,6 +98,7 @@
   },
   "dependencies": {
     "deepmerge": "^3.0.0",
+    "koa": "^2.7.0",
     "load-script": "^1.0.0",
     "prop-types": "^15.5.6",
     "vast-client": "^1.8.4"
