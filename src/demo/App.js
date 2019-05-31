@@ -362,6 +362,12 @@ class App extends Component {
               </td>
             </tr>
             <tr>
+              <th>VPAID</th>
+              <td>
+                {this.renderLoadButton('VPAID:https://svastx.moatads.com/groupmunilevervideo5876034363/Axe_-_UNE_AXE_461_AXE_YHWYC_2019-27846092_js.xml', 'Test A')}
+              </td>
+            </tr>
+            <tr>
               <th>Phenix</th>
               <td>
                 {this.renderLoadButton('phenix:http://localhost:4004/end-to-end/v2/phenix/api|us-southwest#maestro.io#andyTest2.Doo3kmPq7VCi', 'Local')}

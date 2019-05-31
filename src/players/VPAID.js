@@ -1,30 +1,29 @@
 import React, { Component } from 'react'
-import { VASTClient, VASTTracker } from 'vast-client'
-import { callPlayer } from '../utils'
+import VPAIDHTML5Client from 'vpaid-html5-client'
+import { callPlayer, randomString } from '../utils'
 import createSinglePlayer from '../singlePlayer'
-import { FilePlayer } from './FilePlayer'
+import { VASTTracker } from 'vast-client'
 
-const MATCH_URL = /^VAST:https:\/\//i
-export class VAST extends Component {
-  static displayName = 'VAST';
+const MATCH_URL = /^VPAID:https:\/\//i
+const PLAYER_ID_PREFIX = 'vpaid-player-'
+const CONTENT_ID_PREFIX = 'vpaid-content-'
+
+export class VPAID extends Component {
+  static displayName = 'VPAID';
   static canPlay = url => MATCH_URL.test(url);
 
+  playerID = PLAYER_ID_PREFIX + randomString()
+  contentID = CONTENT_ID_PREFIX + randomString()
+
   state = {
+    adUnit: null,
     sources: [],
-    tracker: null,
-    vastClient: new VASTClient()
+    vpaidClient: null
   }
 
   callPlayer = callPlayer;
 
-  createSourceFiles (mediaFiles = []) {
-    return mediaFiles
-      .map(({fileURL: src, mimeType: type} = {}) => ({src, type}))
-      .filter(({src}) => FilePlayer.canPlay(src))
-  }
-
   parseResponse (response) {
-    const {onEnded} = this.props
     const {ads = []} = response
 
     // find video creatives
@@ -37,15 +36,12 @@ export class VAST extends Component {
           const sources = this.createSourceFiles(mediaFiles)
           if (sources.length) {
             return this.setState({
-              sources,
+              sources
               // eslint-disable-next-line new-cap
-              tracker: new VASTTracker(this.state.vastClient, ad, creative)
             })
           }
         }
       }
-
-      return onEnded()
     }
   }
 
@@ -62,6 +58,24 @@ export class VAST extends Component {
     }).catch((error) => {
       return this.props.onError(error)
     })
+
+    this.state.vpaidClient = new VPAIDHTML5Client(
+      document.getElementById(this.contentID),
+      document.getElementById(this.playerID)
+    )
+
+    // replace [RANDOM] or [random] with a randomly generated cache value
+    const onLoad = (error, adUnit) => {
+      console.log({
+        error,
+        adUnit
+      })
+      if (error) {
+        return this.props.onError(error)
+      }
+      this.state.adUnit = adUnit
+    }
+    this.state.vpaidClient.loadAdUnit(url.slice('VPAID:'.length), onLoad)
   }
 
   // todo: add skip functionality
@@ -120,15 +134,6 @@ export class VAST extends Component {
     this.container = container
   };
 
-  onAdClick = () => {
-    const {state: {tracker}} = this
-    tracker.click()
-  }
-
-  openAdLink (url) {
-    window.open(url, '_blank')
-  }
-
   // track ended
   onEnded = (event) => {
     const {props: {onEnded}, state: {tracker}} = this
@@ -185,34 +190,25 @@ export class VAST extends Component {
   }
 
   render () {
-    const {sources, tracker: clickTrackingURLTemplate} = this.state
     const { width, height } = this.props
-    const wrapperStyle = {
-      cursor: clickTrackingURLTemplate ? 'pointer' : 'default',
-      height: '100%'
-    }
-    const videoStyle = {
+    const dimensions = {
       width: width === 'auto' ? width : '100%',
       height: height === 'auto' ? height : '100%'
     }
-    return sources.length ? (
-      <div onClick={this.onAdClick} style={wrapperStyle}>
-        <FilePlayer
-          {...this.props}
-          onEnded={this.onEnded}
-          onError={this.onError}
-          onPause={this.onPause}
-          onPlay={this.onPlay}
-          onProgress={this.onProgress}
-          onReady={this.onReady}
-          onVolumeChange={this.onVolumeChange}
-          ref={this.ref}
-          style={videoStyle}
-          url={this.state.sources[0].src}
-        />
+    const contentStyle = {
+      ...dimensions,
+      top: 0,
+      left: 0,
+      position: 'absolute',
+      zIndex: 1
+    }
+    return (
+      <div style={{...dimensions, position: 'relative'}}>
+        <div id={this.contentID} style={contentStyle} />
+        <video style={dimensions} id={this.playerID} />
       </div>
-    ) : null
+    )
   }
 }
 
-export default createSinglePlayer(VAST)
+export default createSinglePlayer(VPAID)
