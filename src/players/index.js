@@ -13,7 +13,6 @@ import { Iframe } from './Iframe'
 import { Mixcloud } from './Mixcloud'
 import { FilePlayer } from './FilePlayer'
 import { VAST } from './VAST'
-import { VPAID } from './VPAID'
 import { JWPlayer } from './JWPlayer'
 import { PhenixPlayer } from './PhenixPlayer'
 
@@ -33,7 +32,6 @@ export default [
   UstreamVideo,
   JWPlayer,
   VAST,
-  VPAID,
   FilePlayer,
   Iframe
 ]

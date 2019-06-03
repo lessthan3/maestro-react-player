@@ -1,26 +1,46 @@
 import React, { Component } from 'react'
+import VPAIDHTML5Client from 'vpaid-html5-client'
 import { VASTClient, VASTTracker } from 'vast-client'
-import { callPlayer } from '../utils'
+import { callPlayer, randomString } from '../utils'
 import createSinglePlayer from '../singlePlayer'
 import { FilePlayer } from './FilePlayer'
 
+const PLAYER_ID_PREFIX = 'vast-player-'
+const CONTENT_ID_PREFIX = 'vast-content-'
+const SKIP_ID_PREFIX = 'vast-skip-'
 const MATCH_URL = /^VAST:https:\/\//i
 export class VAST extends Component {
   static displayName = 'VAST';
   static canPlay = url => MATCH_URL.test(url);
 
   state = {
+    canSkip: false,
+    framework: null,
+    preMuteVolume: 0.0,
     sources: [],
     tracker: null,
-    vastClient: new VASTClient()
+    type: null,
+    vastClient: new VASTClient(),
+    vpaidAdUnit: null,
+    vpaidClient: null
   }
+
+  playerID = PLAYER_ID_PREFIX + randomString()
+  contentID = CONTENT_ID_PREFIX + randomString()
+  skipID = SKIP_ID_PREFIX + randomString()
 
   callPlayer = callPlayer;
 
   createSourceFiles (mediaFiles = []) {
     return mediaFiles
-      .map(({fileURL: src, mimeType: type} = {}) => ({src, type}))
-      .filter(({src}) => FilePlayer.canPlay(src))
+      .map(({apiFramework, fileURL: src, mimeType: type} = {}) => ({apiFramework, src, type}))
+      .filter(({apiFramework, src}) => (apiFramework === 'VPAID') || FilePlayer.canPlay(src))
+  }
+
+  componentWillUnmount () {
+    if (this.state.framework === 'VPAID') {
+      this.removeVPAIDListeners()
+    }
   }
 
   parseResponse (response) {
@@ -37,6 +57,7 @@ export class VAST extends Component {
           const sources = this.createSourceFiles(mediaFiles)
           if (sources.length) {
             return this.setState({
+              framework: sources[0].apiFramework || 'VAST',
               sources,
               // eslint-disable-next-line new-cap
               tracker: new VASTTracker(this.state.vastClient, ad, creative)
@@ -49,71 +70,208 @@ export class VAST extends Component {
     }
   }
 
+  addVPAIDListeners () {
+    const { framework } = this.state
+    if (framework !== 'VPAID') {
+      return null
+    }
+    const {
+      onReady, onPlay, onBuffer, onBufferEnd,
+      onPause, onEnded, onError,
+      onVolumeChange
+    } = this.props
+
+    this.container.addEventListener('canplay', onReady)
+    this.container.addEventListener('play', onPlay)
+    this.container.addEventListener('waiting', onBuffer)
+    this.container.addEventListener('playing', onBufferEnd)
+    this.container.addEventListener('pause', onPause)
+    this.container.addEventListener('ended', onEnded)
+    this.container.addEventListener('error', onError)
+    this.container.addEventListener('volumeChange', onVolumeChange)
+
+    // list of events available in IVPAIDAdUnit.js in vpaid-html5-client
+    this.state.vpaidAdUnit.subscribe('AdLoaded', this.onVPAIDAdLoaded.bind(this))
+    this.state.vpaidAdUnit.subscribe('AdSkippableStateChange', this.props.onAdSkippable.bind(this))
+  }
+
+  skip () {
+    const { framework, tracker, vpaidAdUnit } = this.state
+    if (framework === 'VAST' && tracker) {
+      tracker.skip()
+    } else {
+      vpaidAdUnit.skipAd()
+    }
+  }
+
+  onVPAIDAdLoaded () {
+    const { onReady, playing } = this.props
+    const { vpaidAdUnit} = this.state
+    onReady()
+    if (playing) {
+      vpaidAdUnit.startAd()
+      this.setVolume(0.0)
+    }
+  }
+
+  removeVPAIDListeners () {
+    const {
+      onReady, onPlay, onBuffer, onBufferEnd,
+      onPause, onEnded, onError,
+      onVolumeChange
+    } = this.props
+    this.container.removeEventListener('canplay', onReady)
+    this.container.removeEventListener('play', onPlay)
+    this.container.removeEventListener('waiting', onBuffer)
+    this.container.removeEventListener('playing', onBufferEnd)
+    this.container.removeEventListener('pause', onPause)
+    this.container.removeEventListener('ended', onEnded)
+    this.container.removeEventListener('error', onError)
+    this.container.removeEventListener('volumeChange', onVolumeChange)
+    this.state.vpaidAdUnit.unsubscribe('AdLoaded')
+    this.state.vpaidAdUnit.unsubscribe('AdSkippableStateChange')
+  }
+
+  loadVPAID (url) {
+    this.state.vpaidClient = new VPAIDHTML5Client(
+      document.getElementById(this.contentID),
+      document.getElementById(this.playerID)
+    )
+    const { onError } = this.props
+    const { vpaidClient } = this.state
+    vpaidClient.loadAdUnit(url, (error, adUnit) => {
+      if (error) {
+        return onError(error)
+      }
+      this.state.vpaidAdUnit = adUnit
+      this.addVPAIDListeners()
+      adUnit.initAd('100%', '100%', 'normal', -1, {}, {})
+    })
+  }
+
   load (rawUrl) {
     // replace [RANDOM] or [random] with a randomly generated cache value
     const ord = Math.random() * 10000000000000000
     const url = rawUrl.replace(/\[random]/ig, ord)
     this.state.vastClient.get(url.slice('VAST:'.length), { withCredentials: true }).then((response) => {
       this.parseResponse(response)
-      const {tracker} = this.state
-      if (tracker) {
-        tracker.on('clickthrough', this.openAdLink)
+      const {framework, sources, tracker} = this.state
+      if (framework === 'VPAID') {
+        this.loadVPAID(sources[0].src)
+      } else {
+        if (tracker) {
+          tracker.on('clickthrough', this.openAdLink)
+        }
       }
     }).catch((error) => {
       return this.props.onError(error)
     })
   }
 
-  // todo: add skip functionality
-  skip () {
-    const {props: {onEnded}, state: {tracker}} = this
-    if (tracker) {
-      tracker.skip()
-    }
-    onEnded()
-  }
-
   play () {
-    this.container.play()
+    const { framework, vpaidAdUnit } = this.state
+    if (framework === 'VPAID') {
+      vpaidAdUnit.resumeAd()
+    } else {
+      this.container.play()
+    }
   }
 
   pause () {
-    this.container.pause()
+    const { framework, vpaidAdUnit } = this.state
+    if (framework === 'VPAID') {
+      vpaidAdUnit.pauseAd()
+    } else {
+      this.container.pause()
+    }
   }
 
   stop () {
-    this.container.stop()
+    const { framework, vpaidAdUnit } = this.state
+    if (framework === 'VPAID') {
+      vpaidAdUnit.stopAd()
+    } else {
+      this.container.stop()
+    }
   }
 
-  // only allow rewind
+  // only allow rewind for VAST
   seekTo (seconds) {
-    if (seconds < this.container.getCurrentTime()) {
-      this.container.seekTo(seconds)
+    const {framework} = this.state
+    if (framework === 'VAST') {
+      if (seconds < this.getCurrentTime()) {
+        this.container.seekTo(seconds)
+      }
     }
   }
 
   setVolume (fraction) {
-    this.container.setVolume(fraction)
+    const { framework, vpaidAdUnit } = this.state
+    if (framework === 'VPAID') {
+      vpaidAdUnit.setAdVolume(fraction)
+    } else {
+      this.container.setVolume(fraction)
+    }
   }
 
   mute = () => {
-    this.container.mute()
+    const { framework, vpaidAdUnit } = this.state
+    if (framework === 'VPAID') {
+      this.setState({
+        preMuteVolume: this.container.volume
+      })
+      vpaidAdUnit.setAdVolume(0.0)
+    } else {
+      this.container.mute()
+    }
   };
 
   unmute = () => {
-    this.container.unmute()
+    const { framework, preMuteVolume, vpaidAdUnit } = this.state
+    if (framework === 'VPAID') {
+      vpaidAdUnit.setAdVolume(preMuteVolume)
+    } else {
+      this.container.unmute()
+    }
   };
 
   getDuration () {
-    return this.container.getDuration()
+    const { framework } = this.state
+    if (framework === 'VPAID') {
+      if (!this.container) return null
+      const { duration } = this.container
+      return duration
+    } else {
+      return this.container.getDuration()
+    }
   }
 
   getCurrentTime () {
-    return this.container.getCurrentTime()
+    const { framework } = this.state
+    if (framework === 'VPAID') {
+      return this.container ? this.container.currentTime : null
+    } else {
+      return this.container.getCurrentTime()
+    }
   }
 
   getSecondsLoaded () {
-    return this.container.getSecondsLoaded()
+    const { framework } = this.state
+    if (framework === 'VPAID') {
+      if (!this.container) return null
+      const { buffered } = this.container
+      if (buffered.length === 0) {
+        return 0
+      }
+      const end = buffered.end(buffered.length - 1)
+      const duration = this.getDuration()
+      if (end > duration) {
+        return duration
+      }
+      return end
+    } else {
+      return this.container.getCurrentTime()
+    }
   }
 
   ref = (container) => {
@@ -121,8 +279,10 @@ export class VAST extends Component {
   };
 
   onAdClick = () => {
-    const {state: {tracker}} = this
-    tracker.click()
+    const { framework, tracker } = this.state
+    if (framework === 'VAST' && tracker) {
+      tracker.click()
+    }
   }
 
   openAdLink (url) {
@@ -131,8 +291,9 @@ export class VAST extends Component {
 
   // track ended
   onEnded = (event) => {
-    const {props: {onEnded}, state: {tracker}} = this
-    if (tracker) {
+    const { onEnded } = this.props
+    const { framework, tracker } = this.state
+    if (framework === 'VAST' && tracker) {
       tracker.complete()
     }
     onEnded(event)
@@ -140,8 +301,9 @@ export class VAST extends Component {
 
   // track error
   onError = (event) => {
-    const {props: {onError}, state: {tracker}} = this
-    if (tracker) {
+    const { onError } = this.props
+    const { framework, tracker } = this.state
+    if (framework === 'VAST' && tracker) {
       tracker.errorWithCode(405)
     }
     onError(event)
@@ -149,42 +311,57 @@ export class VAST extends Component {
 
   // track pause
   onPause = (event) => {
-    const {props: {onPause}, state: {tracker}} = this
-    tracker.setPaused(true)
+    const { onPause } = this.props
+    const { framework, tracker } = this.state
+    if (framework === 'VAST' && tracker) {
+      tracker.setPaused(true)
+    }
     onPause(event)
   }
 
   // track play
   onPlay = (event) => {
-    const {props: {onPlay}, state: {tracker}} = this
-    tracker.setPaused(false)
+    const { onPlay } = this.props
+    const { framework, tracker } = this.state
+    if (framework === 'VAST' && tracker) {
+      tracker.setPaused(false)
+    }
     onPlay(event)
   }
 
   onProgress = (event) => {
-    const {props: {onProgress}, state: {tracker}} = this
-    tracker.setProgress(event.playedSeconds)
+    const { onProgress } = this.props
+    const { framework, tracker } = this.state
+    if (framework === 'VAST' && tracker) {
+      tracker.setProgress(event.playedSeconds)
+    }
     onProgress(event)
   }
 
   // track load and duration
   onReady = (event) => {
-    const {props: {onReady}, state: {tracker}} = this
-    tracker.load()
-    if (Number.isNaN(tracker.assetDuration)) {
-      tracker.assetDuration = this.container.getDuration()
+    const { onReady } = this.props
+    const { framework, tracker } = this.state
+    if (framework === 'VAST' && tracker) {
+      if (Number.isNaN(tracker.assetDuration)) {
+        tracker.assetDuration = this.container.getDuration()
+      }
     }
+
     onReady(event)
   }
 
   // track volume change
   onVolumeChange = (event) => {
-    const {props: {onVolumeChange}, state: {tracker}} = this
-    tracker.setMuted(this.container.muted)
+    const { onVolumeChange } = this.props
+    const { framework, tracker } = this.state
+    if (framework === 'VAST' && tracker) {
+      tracker.setMuted(this.container.muted)
+    }
     onVolumeChange(event)
   }
 
-  render () {
+  renderVAST () {
     const {sources, tracker: clickTrackingURLTemplate} = this.state
     const { width, height } = this.props
     const wrapperStyle = {
@@ -212,6 +389,57 @@ export class VAST extends Component {
         />
       </div>
     ) : null
+  }
+
+  renderVPAID () {
+    const { width, height } = this.props
+    const { canSkip } = this.state
+    const dimensions = {
+      width: width === 'auto' ? width : '100%',
+      height: height === 'auto' ? height : '100%'
+    }
+    const contentStyle = {
+      ...dimensions,
+      top: 0,
+      left: 0,
+      position: 'absolute',
+      zIndex: 1
+    }
+    const skipStyle = {
+      cursor: 'pointer',
+      display: 'block',
+      position: 'absolute',
+      bottom: '10px',
+      right: '10px',
+      zIndex: 2
+    }
+    return (
+      <div style={{...dimensions, position: 'relative'}}>
+        { canSkip && <button
+          id={this.skipID}
+          style={skipStyle}
+          onClick={() => this.skip()}>Skip</button> }
+        <div id={this.contentID} style={contentStyle} />
+        <video
+          ref={this.ref}
+          controls={false}
+          style={dimensions}
+          id={this.playerID}
+        />
+      </div>
+    )
+  }
+
+  render () {
+    const { framework } = this.state
+    if (!framework) {
+      return null
+    }
+    if (framework === 'VPAID') {
+      return this.renderVPAID()
+    } else {
+      return this.renderVAST()
+    }
   }
 }
 

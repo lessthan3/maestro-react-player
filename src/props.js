@@ -64,6 +64,7 @@ export const propTypes = {
       options: object
     })
   }),
+  onAdSkippable: func,
   onReady: func,
   onStart: func,
   onPlay: func,
@@ -148,6 +149,9 @@ export const defaultProps = {
       hlsVersion: '0.10.1',
       dashVersion: '2.9.2'
     },
+    vast: {
+
+    },
     wistia: {
       options: {}
     },
@@ -160,6 +164,7 @@ export const defaultProps = {
       options: {}
     }
   },
+  onAdSkippable: function () {},
   onReady: function () {},
   onStart: function () {},
   onPlay: function () {},
