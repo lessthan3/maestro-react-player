@@ -149,9 +149,6 @@ export const defaultProps = {
       hlsVersion: '0.10.1',
       dashVersion: '2.9.2'
     },
-    vast: {
-
-    },
     wistia: {
       options: {}
     },
