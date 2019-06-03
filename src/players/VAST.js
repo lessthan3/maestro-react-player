@@ -106,7 +106,7 @@ export class VAST extends Component {
 
   onVPAIDAdLoaded () {
     const { onReady, playing } = this.props
-    const { vpaidAdUnit} = this.state
+    const { vpaidAdUnit } = this.state
     onReady()
     if (playing) {
       vpaidAdUnit.startAd()
