@@ -207,7 +207,6 @@ export class VAST extends Component {
   onReady () {
     const { playing, onReady } = this.props
     const { autoplayAllowed, autoplayRequiresMuted } = this.state
-    console.log({ autoplayAllowed, autoplayRequiresMuted, playing})
     if (autoplayAllowed && playing) {
       if (autoplayRequiresMuted) {
         this.setVolume(0.0)
@@ -349,23 +348,35 @@ export class VAST extends Component {
     this.autoplayTestPlayer = player
   };
 
-  play () {
+  play (event) {
     // Initialize the container. Must be done via a user action where autoplay
     // is not allowed.
-    const { adDisplayContainer, adsInitialized, adsManager } = this.state
+    const {
+      adDisplayContainer,
+      adsInitialized,
+      adsManager,
+      autoplayRequiresMuted,
+      autoplayAllowed
+    } = this.state
     if (!adsManager) return null
     if (adsInitialized) {
       adsManager.resume()
     } else {
+      // non-user event, and autoplay not allowed
+      if (!event && !autoplayAllowed) return null
+
       adDisplayContainer.initialize()
       this.setState({
         adsInitialized: true,
         showPlayButton: false
-      }, () => {
-        this.player.load()
-        console.log('play fired')
-        this.playAds()
       })
+      this.player.load()
+
+      // must mute if autoplay requires am ute
+      if (!event && autoplayRequiresMuted) {
+        this.setVolume(0.0)
+      }
+      this.playAds()
     }
   }
 
@@ -413,7 +424,7 @@ export class VAST extends Component {
     return (
       <div style={{...dimensions, position: 'relative'}}>
         { showPlayButton &&
-          <div style={playButtonStyle} id={this.playButtonID} onClick={() => this.play()} /> }
+          <div style={playButtonStyle} id={this.playButtonID} onClick={(e) => this.play(e)} /> }
         <video
           ref={this.playerRef}
           controls={false}
