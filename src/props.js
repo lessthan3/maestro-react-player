@@ -64,6 +64,7 @@ export const propTypes = {
       options: object
     })
   }),
+  onAdSkippable: func,
   onReady: func,
   onStart: func,
   onPlay: func,
@@ -75,6 +76,7 @@ export const propTypes = {
   onDuration: func,
   onSeek: func,
   onProgress: func,
+  onVolumeChange: func,
   onEnablePIP: func,
   onDisablePIP: func
 }
@@ -159,6 +161,7 @@ export const defaultProps = {
       options: {}
     }
   },
+  onAdSkippable: function () {},
   onReady: function () {},
   onStart: function () {},
   onPlay: function () {},
@@ -169,6 +172,7 @@ export const defaultProps = {
   onError: function () {},
   onDuration: function () {},
   onSeek: function () {},
+  onVolumeChange: function () {},
   onProgress: function () {},
   onEnablePIP: function () {},
   onDisablePIP: function () {}
