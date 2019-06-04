@@ -64,7 +64,6 @@ export const propTypes = {
       options: object
     })
   }),
-  onAdSkippable: func,
   onReady: func,
   onStart: func,
   onPlay: func,
@@ -161,7 +160,6 @@ export const defaultProps = {
       options: {}
     }
   },
-  onAdSkippable: function () {},
   onReady: function () {},
   onStart: function () {},
   onPlay: function () {},

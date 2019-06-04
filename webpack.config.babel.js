@@ -53,9 +53,6 @@ export default {
     filename: 'app.js',
     publicPath: PUBLIC_PATH
   },
-  node: {
-    fs: 'empty'
-  },
   plugins: [
     ...plugins,
     new webpack.HotModuleReplacementPlugin(),

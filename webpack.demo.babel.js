@@ -1,6 +1,5 @@
 import webpack from 'webpack'
 import ExtractTextPlugin from 'extract-text-webpack-plugin'
-import TerserPlugin from 'terser-webpack-plugin-legacy'
 import config, { plugins } from './webpack.config.babel'
 
 export const minifyPlugins = [
@@ -9,10 +8,11 @@ export const minifyPlugins = [
       NODE_ENV: JSON.stringify('production')
     }
   }),
-  new TerserPlugin({
-    exclude: 'ReactPlayer',
-    terserOptions: {
-      mangle: true
+  new webpack.optimize.UglifyJsPlugin({
+    sourceMap: true,
+    comments: false,
+    mangle: {
+      except: [ 'ReactPlayer' ]
     }
   }),
   new webpack.LoaderOptionsPlugin({ minimize: true })
