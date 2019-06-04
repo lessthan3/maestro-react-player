@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@alugha/ima@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@alugha/ima/-/ima-1.1.2.tgz#d723da65b90c5fae6fe96f014c038e2bdb07f1c2"
+  integrity sha512-UH+GqdJOp1Wk8V78GDiF7o+rZrgFeLvvglle5mSFFs2eA/ZQQekNooLd6rJ+h9KXEPTXlGAMsJmxEWsrlHpHBg==
+
 "@ava/babel-plugin-throws-helper@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@ava/babel-plugin-throws-helper/-/babel-plugin-throws-helper-2.0.0.tgz#2fc1fe3c211a71071a4eca7b8f7af5842cd1ae7c"

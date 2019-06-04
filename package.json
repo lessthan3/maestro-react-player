@@ -99,6 +99,7 @@
     "whatwg-fetch": "^2.0.1"
   },
   "dependencies": {
+    "@alugha/ima": "^1.1.2",
     "deepmerge": "^3.0.0",
     "koa": "^2.7.0",
     "load-script": "^1.0.0",

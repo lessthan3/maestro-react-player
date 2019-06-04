@@ -4344,7 +4344,6 @@ var VAST = exports.VAST = function (_Component) {
     }
 
     return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = VAST.__proto__ || Object.getPrototypeOf(VAST)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
-      canSkip: false,
       framework: null,
       preMuteVolume: 0.0,
       sources: [],
@@ -4352,7 +4351,8 @@ var VAST = exports.VAST = function (_Component) {
       type: null,
       vastClient: new _vastClient.VASTClient(),
       vpaidAdUnit: null,
-      vpaidClient: null
+      vpaidClient: null,
+      vpaidStarted: false
     }, _this.playerID = PLAYER_ID_PREFIX + (0, _utils.randomString)(), _this.contentID = CONTENT_ID_PREFIX + (0, _utils.randomString)(), _this.skipID = SKIP_ID_PREFIX + (0, _utils.randomString)(), _this.callPlayer = _utils.callPlayer, _this.mute = function () {
       var _this$state = _this.state,
           framework = _this$state.framework,
@@ -4489,6 +4489,24 @@ var VAST = exports.VAST = function (_Component) {
       }
     }
   }, {
+    key: 'componentDidUpdate',
+    value: function componentDidUpdate(prevProps, prevState) {
+      var _state = this.state,
+          framework = _state.framework,
+          sources = _state.sources,
+          tracker = _state.tracker;
+
+      if (sources !== prevState.sources) {
+        if (framework === 'VPAID') {
+          this.loadVPAID(sources[0].src);
+        } else {
+          if (tracker) {
+            tracker.on('clickthrough', this.openAdLink);
+          }
+        }
+      }
+    }
+  }, {
     key: 'parseResponse',
     value: function parseResponse(response) {
       var onEnded = this.props.onEnded;
@@ -4521,12 +4539,14 @@ var VAST = exports.VAST = function (_Component) {
               if (type === 'linear') {
                 var sources = this.createSourceFiles(mediaFiles);
                 if (sources.length) {
-                  return this.setState({
-                    framework: sources[0].apiFramework || 'VAST',
+                  var framework = sources[0].apiFramework || 'VAST';
+                  this.setState({
+                    framework: framework,
                     sources: sources,
                     // eslint-disable-next-line new-cap
-                    tracker: new _vastClient.VASTTracker(this.state.vastClient, ad, creative)
+                    tracker: framework === 'VAST' ? new _vastClient.VASTTracker(this.state.vastClient, ad, creative) : null
                   });
+                  return;
                 }
               }
             }
@@ -4544,9 +4564,9 @@ var VAST = exports.VAST = function (_Component) {
               }
             }
           }
-
-          return onEnded();
         }
+
+        // no sources found, end
       } catch (err) {
         _didIteratorError = true;
         _iteratorError = err;
@@ -4561,6 +4581,8 @@ var VAST = exports.VAST = function (_Component) {
           }
         }
       }
+
+      onEnded();
     }
   }, {
     key: 'addVPAIDListeners',
@@ -4597,10 +4619,10 @@ var VAST = exports.VAST = function (_Component) {
   }, {
     key: 'skip',
     value: function skip() {
-      var _state = this.state,
-          framework = _state.framework,
-          tracker = _state.tracker,
-          vpaidAdUnit = _state.vpaidAdUnit;
+      var _state2 = this.state,
+          framework = _state2.framework,
+          tracker = _state2.tracker,
+          vpaidAdUnit = _state2.vpaidAdUnit;
 
       if (framework === 'VAST' && tracker) {
         tracker.skip();
@@ -4618,8 +4640,9 @@ var VAST = exports.VAST = function (_Component) {
 
       onReady();
       if (playing) {
-        vpaidAdUnit.startAd();
         this.setVolume(0.0);
+        vpaidAdUnit.startAd();
+        this.setState({ vpaidStarted: true });
       }
     }
   }, {
@@ -4674,18 +4697,6 @@ var VAST = exports.VAST = function (_Component) {
       var url = rawUrl.replace(/\[random]/ig, ord);
       this.state.vastClient.get(url.slice('VAST:'.length), { withCredentials: true }).then(function (response) {
         _this3.parseResponse(response);
-        var _state2 = _this3.state,
-            framework = _state2.framework,
-            sources = _state2.sources,
-            tracker = _state2.tracker;
-
-        if (framework === 'VPAID') {
-          _this3.loadVPAID(sources[0].src);
-        } else {
-          if (tracker) {
-            tracker.on('clickthrough', _this3.openAdLink);
-          }
-        }
       })['catch'](function (error) {
         return _this3.props.onError(error);
       });
@@ -4695,10 +4706,16 @@ var VAST = exports.VAST = function (_Component) {
     value: function play() {
       var _state3 = this.state,
           framework = _state3.framework,
-          vpaidAdUnit = _state3.vpaidAdUnit;
+          vpaidAdUnit = _state3.vpaidAdUnit,
+          vpaidStarted = _state3.vpaidStarted;
 
       if (framework === 'VPAID') {
-        vpaidAdUnit.resumeAd();
+        if (!vpaidStarted) {
+          vpaidAdUnit.startAd();
+          this.setState({ vpaidStarted: true });
+          return;
+        }
+        return vpaidAdUnit.resumeAd();
       } else {
         this.container.play();
       }
@@ -4864,12 +4881,9 @@ var VAST = exports.VAST = function (_Component) {
   }, {
     key: 'renderVPAID',
     value: function renderVPAID() {
-      var _this4 = this;
-
       var _props5 = this.props,
           width = _props5.width,
           height = _props5.height;
-      var canSkip = this.state.canSkip;
 
       var dimensions = {
         width: width === 'auto' ? width : '100%',
@@ -4881,27 +4895,9 @@ var VAST = exports.VAST = function (_Component) {
         position: 'absolute',
         zIndex: 1
       });
-      var skipStyle = {
-        cursor: 'pointer',
-        display: 'block',
-        position: 'absolute',
-        bottom: '10px',
-        right: '10px',
-        zIndex: 2
-      };
       return _react2['default'].createElement(
         'div',
         { style: _extends({}, dimensions, { position: 'relative' }) },
-        canSkip && _react2['default'].createElement(
-          'button',
-          {
-            id: this.skipID,
-            style: skipStyle,
-            onClick: function onClick() {
-              return _this4.skip();
-            } },
-          'Skip'
-        ),
         _react2['default'].createElement('div', { id: this.contentID, style: contentStyle }),
         _react2['default'].createElement('video', {
           ref: this.ref,

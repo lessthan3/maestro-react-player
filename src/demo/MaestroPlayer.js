@@ -23,9 +23,9 @@ export default class MaestroPlayer extends React.Component {
     setTimeout(() => {
       this.setState({
         video: {
-          offset: 102,
+          offset: 0,
           spot: 'tv',
-          url: 'http://www.ustream.tv/channel/6540154'
+          url: 'VAST:https://svastx.moatads.com/groupmunilevervideo5876034363/Axe_-_UNE_AXE_461_AXE_YHWYC_2019-27846092_js.xml'
         },
         ready: false
       })
@@ -82,7 +82,7 @@ export default class MaestroPlayer extends React.Component {
           onPause={this.onPause}
           onPlay={this.onPlay}
           onReady={this.onReady}
-          playing
+          playing={false}
           playsinline
           style={{
             left: 0,

@@ -21,8 +21,5 @@ export default {
       }
     ]
   },
-  node: {
-    fs: 'empty'
-  },
   plugins: minifyPlugins
 }
