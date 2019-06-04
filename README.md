@@ -224,7 +224,7 @@ If you aren’t using React, you can still render a player using the standalone 
 ```html
 <script src='https://cdn.rawgit.com/CookPete/react-player/standalone/dist/ReactPlayer.standalone.js'></script>
 <script>
-  const container = document.getElementById(player)
+  const container = document.getElementById('container')
   const url = 'https://www.youtube.com/watch?v=d46Azg3Pm4c'
 
   renderReactPlayer(container, { url, playing: true })
