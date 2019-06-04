@@ -3,6 +3,7 @@ import { callPlayer, randomString } from '../utils'
 import createSinglePlayer from '../singlePlayer'
 import { loadImaSdk } from '@alugha/ima'
 
+const IOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
 const PLAYER_ID_PREFIX = 'vast-player-'
 const CONTENT_ID_PREFIX = 'vast-content-'
 const PLAY_BUTTON_ID_PREFIX = 'vast-play-'
@@ -36,8 +37,7 @@ export class VAST extends Component {
 
   onAutoplayWithSoundSuccess () {
     // If we make it here, unmuted autoplay works.
-    const videoElement = document.getElementById(this.playerID)
-    videoElement.pause()
+    this.player.pause()
     this.setState({
       autoplayAllowed: true,
       autoplayRequiresMuted: false,
@@ -47,8 +47,7 @@ export class VAST extends Component {
 
   onMutedAutoplaySuccess () {
     // If we make it here, muted autoplay works but unmuted autoplay does not.
-    const videoElement = document.getElementById(this.playerID)
-    videoElement.pause()
+    this.player.pause()
     this.setState({
       autoplayAllowed: true,
       autoplayRequiresMuted: true,
@@ -58,9 +57,8 @@ export class VAST extends Component {
 
   onMutedAutoplayFail () {
     // Both muted and unmuted autoplay failed. Fall back to click to play.
-    const videoElement = document.getElementById(this.playerID)
-    videoElement.volume = 1
-    videoElement.muted = false
+    this.player.volume = 1
+    this.player.muted = false
     this.setState({
       autoplayAllowed: false,
       autoplayRequiresMuted: false,
@@ -69,10 +67,9 @@ export class VAST extends Component {
   }
 
   checkMutedAutoplaySupport () {
-    const videoElement = document.getElementById(this.playerID)
-    videoElement.volume = 0
-    videoElement.muted = true
-    const promise = videoElement.play()
+    this.player.volume = 0
+    this.player.muted = true
+    const promise = this.player.play()
     if (promise !== undefined) {
       promise.then(() => {
         this.onMutedAutoplaySuccess()
@@ -83,8 +80,7 @@ export class VAST extends Component {
   }
 
   checkAutoplaySupport () {
-    const videoElement = document.getElementById(this.playerID)
-    const promise = videoElement.play()
+    const promise = this.player.play()
     if (promise !== undefined) {
       promise
         .then(() => {
@@ -93,6 +89,22 @@ export class VAST extends Component {
         .catch(() => {
           this.checkMutedAutoplaySupport()
         })
+    }
+  }
+
+  addListeners () {
+    const { playsinline } = this.props
+    if (playsinline) {
+      this.player.setAttribute('playsinline', '')
+      this.player.setAttribute('webkit-playsinline', '')
+      this.player.setAttribute('x5-playsinline', '')
+    }
+  }
+
+  componentDidMount () {
+    this.addListeners()
+    if (IOS) {
+      this.player.load()
     }
   }
 
@@ -112,12 +124,7 @@ export class VAST extends Component {
 
     // adsManager events listening
     if (prevState.adsManager === null && this.state.adsManager) {
-      const { autoplayAllowed } = this.state
-      if (autoplayAllowed) {
-        this.playAds()
-      } else {
-        this.setState({showPlayButton: true})
-      }
+      this.onReady()
     }
   }
 
@@ -138,8 +145,7 @@ export class VAST extends Component {
 
   onWindowResize () {
     const { adsManager, ima } = this.state
-    const videoElement = document.getElementById(this.playerID)
-    const {offsetHeight: height, offsetWidth: width} = videoElement
+    const {offsetHeight: height, offsetWidth: width} = this.player
     if (!adsManager) return null
     adsManager.resize(width, height, ima.ViewMode.NORMAL)
   }
@@ -159,9 +165,7 @@ export class VAST extends Component {
       onVolumeChange
     } = this.props
     const { ima } = this.state
-    const adsManager = adsManagerLoadedEvent.getAdsManager(
-      document.getElementById(this.playerID)
-    )
+    const adsManager = adsManagerLoadedEvent.getAdsManager(this.player)
 
     // bind resize event
     this._onWindowResize = this.onWindowResize.bind(this)
@@ -193,9 +197,22 @@ export class VAST extends Component {
     adsLoader.requestAds(adsRequest)
   }
 
+  onReady () {
+    const { playing, onReady } = this.props
+    const { autoplayAllowed, autoplayRequiresMuted } = this.state
+    if (autoplayAllowed && playing) {
+      if (autoplayRequiresMuted) {
+        this.setVolume(0.0)
+      }
+      this.playAds()
+    } else {
+      this.setState({showPlayButton: true})
+    }
+    onReady()
+  }
+
   playAds () {
     const { adDisplayContainer, adsManager, adsInitialized, ima } = this.state
-    const { onReady } = this.props
     try {
       if (!adsInitialized) {
         adDisplayContainer.initialize()
@@ -210,9 +227,6 @@ export class VAST extends Component {
       // Call play to start showing the ad. Single video and overlay ads will
       // start at this time; the call will be ignored for ad rules.
       adsManager.start()
-
-      // fire ready
-      onReady()
     } catch (adError) {
       // An error may be thrown if there was a problem with the VAST response.
       this.props.onEnded()
@@ -226,10 +240,7 @@ export class VAST extends Component {
 
     loadImaSdk().then(ima => {
       // Create the ad display container.
-      const adDisplayContainer = new ima.AdDisplayContainer(
-        document.getElementById(this.contentID),
-        document.getElementById(this.playerID)
-      )
+      const adDisplayContainer = new ima.AdDisplayContainer(this.container, this.player)
 
       // Create the ads loader.
       const adsLoader = new ima.AdsLoader(adDisplayContainer)
@@ -263,12 +274,6 @@ export class VAST extends Component {
       adsManager.destroy()
     }
     onError(error)
-  }
-
-  play () {
-    const { adsManager } = this.state
-    if (!adsManager) return null
-    adsManager.resume()
   }
 
   pause () {
@@ -324,23 +329,31 @@ export class VAST extends Component {
     return null
   }
 
-  ref = (container) => {
+  containerRef = (container) => {
     this.container = container
+  }
+
+  playerRef = (player) => {
+    this.player = player
   };
 
-  onButtonClick () {
+  play () {
     // Initialize the container. Must be done via a user action where autoplay
     // is not allowed.
-    const { adDisplayContainer } = this.state
-    adDisplayContainer.initialize()
-    const videoElement = document.getElementById(this.playerID)
-    this.setState({
-      adsInitalized: true,
-      showPlayButton: false
-    }, () => {
-      videoElement.load()
-      this.playAds()
-    })
+    const { adDisplayContainer, adsInitalized, adsManager } = this.state
+    if (!adsManager) return null
+    if (adsInitalized) {
+      adsManager.resume()
+    } else {
+      adDisplayContainer.initialize()
+      this.setState({
+        adsInitalized: true,
+        showPlayButton: false
+      }, () => {
+        this.player.load()
+        this.playAds()
+      })
+    }
   }
 
   render () {
@@ -372,16 +385,15 @@ export class VAST extends Component {
     return (
       <div style={{...dimensions, position: 'relative'}}>
         { showPlayButton &&
-          <div style={playButtonStyle} id={this.playButtonID} onClick={() => this.onButtonClick()} /> }
+          <div style={playButtonStyle} id={this.playButtonID} onClick={() => this.play()} /> }
         <video
-          ref={this.ref}
+          ref={this.playerRef}
           controls={false}
           src={'https://www.maestro.io/pkg/dobi-api/4.0/public/blank.mp4'}
           style={dimensions}
-          preload='auto'
           id={this.playerID}
         />
-        <div id={this.contentID} style={contentStyle} />
+        <div id={this.contentID} style={contentStyle} ref={this.containerRef} />
       </div>
     )
   }
