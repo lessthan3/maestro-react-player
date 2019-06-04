@@ -74,7 +74,11 @@ export class VAST extends Component {
     videoElement.muted = true
     const promise = videoElement.play()
     if (promise !== undefined) {
-      promise.then(this.onMutedAutoplaySuccess).catch(this.onMutedAutoplayFail)
+      promise.then(() => {
+        this.onMutedAutoplaySuccess()
+      }).catch(() => {
+        this.onMutedAutoplayFail()
+      })
     }
   }
 
