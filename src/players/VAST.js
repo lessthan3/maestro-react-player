@@ -5,6 +5,8 @@ import { callPlayer, randomString } from '../utils'
 import createSinglePlayer from '../singlePlayer'
 import { FilePlayer } from './FilePlayer'
 
+window.addEventListener('message', (message) => console.log(message))
+
 const PLAYER_ID_PREFIX = 'vast-player-'
 const CONTENT_ID_PREFIX = 'vast-content-'
 const SKIP_ID_PREFIX = 'vast-skip-'
@@ -19,7 +21,6 @@ export class VAST extends Component {
     preMuteVolume: 0.0,
     sources: [],
     tracker: null,
-    type: null,
     vastClient: new VASTClient(),
     vpaidAdUnit: null,
     vpaidClient: null
@@ -44,7 +45,6 @@ export class VAST extends Component {
   }
 
   parseResponse (response) {
-    const {onEnded} = this.props
     const {ads = []} = response
 
     // find video creatives
@@ -56,17 +56,19 @@ export class VAST extends Component {
         if (type === 'linear') {
           const sources = this.createSourceFiles(mediaFiles)
           if (sources.length) {
-            return this.setState({
-              framework: sources[0].apiFramework || 'VAST',
+            const framework = sources[0].apiFramework || 'VAST'
+            return {
+              framework,
               sources,
               // eslint-disable-next-line new-cap
-              tracker: new VASTTracker(this.state.vastClient, ad, creative)
-            })
+              tracker: framework === 'VAST'
+                ? new VASTTracker(this.state.vastClient, ad, creative) : null
+            }
           }
         }
       }
 
-      return onEnded()
+      return {}
     }
   }
 
@@ -109,8 +111,8 @@ export class VAST extends Component {
     const { vpaidAdUnit } = this.state
     onReady()
     if (playing) {
-      vpaidAdUnit.startAd()
       this.setVolume(0.0)
+      vpaidAdUnit.startAd()
     }
   }
 
@@ -154,15 +156,18 @@ export class VAST extends Component {
     const ord = Math.random() * 10000000000000000
     const url = rawUrl.replace(/\[random]/ig, ord)
     this.state.vastClient.get(url.slice('VAST:'.length), { withCredentials: true }).then((response) => {
-      this.parseResponse(response)
-      const {framework, sources, tracker} = this.state
-      if (framework === 'VPAID') {
-        this.loadVPAID(sources[0].src)
-      } else {
-        if (tracker) {
-          tracker.on('clickthrough', this.openAdLink)
+      const {tracker, sources, framework} = this.parseResponse(response)
+      if (!sources.length) return this.onEnded()
+      this.setState({tracker, sources, framework}, () => {
+        console.log(this.state)
+        if (framework === 'VPAID') {
+          this.loadVPAID(sources[0].src)
+        } else {
+          if (tracker) {
+            tracker.on('clickthrough', this.openAdLink)
+          }
         }
-      }
+      })
     }).catch((error) => {
       return this.props.onError(error)
     })

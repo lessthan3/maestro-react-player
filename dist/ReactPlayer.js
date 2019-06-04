@@ -4349,7 +4349,6 @@ var VAST = exports.VAST = function (_Component) {
       preMuteVolume: 0.0,
       sources: [],
       tracker: null,
-      type: null,
       vastClient: new _vastClient.VASTClient(),
       vpaidAdUnit: null,
       vpaidClient: null
@@ -4491,7 +4490,6 @@ var VAST = exports.VAST = function (_Component) {
   }, {
     key: 'parseResponse',
     value: function parseResponse(response) {
-      var onEnded = this.props.onEnded;
       var _response$ads = response.ads,
           ads = _response$ads === undefined ? [] : _response$ads;
 
@@ -4521,12 +4519,13 @@ var VAST = exports.VAST = function (_Component) {
               if (type === 'linear') {
                 var sources = this.createSourceFiles(mediaFiles);
                 if (sources.length) {
-                  return this.setState({
-                    framework: sources[0].apiFramework || 'VAST',
+                  var framework = sources[0].apiFramework || 'VAST';
+                  return {
+                    framework: framework,
                     sources: sources,
                     // eslint-disable-next-line new-cap
-                    tracker: new _vastClient.VASTTracker(this.state.vastClient, ad, creative)
-                  });
+                    tracker: framework === 'VAST' ? new _vastClient.VASTTracker(this.state.vastClient, ad, creative) : null
+                  };
                 }
               }
             }
@@ -4545,7 +4544,7 @@ var VAST = exports.VAST = function (_Component) {
             }
           }
 
-          return onEnded();
+          return {};
         }
       } catch (err) {
         _didIteratorError = true;
@@ -4618,8 +4617,8 @@ var VAST = exports.VAST = function (_Component) {
 
       onReady();
       if (playing) {
-        vpaidAdUnit.startAd();
         this.setVolume(0.0);
+        vpaidAdUnit.startAd();
       }
     }
   }, {
@@ -4673,19 +4672,22 @@ var VAST = exports.VAST = function (_Component) {
       var ord = Math.random() * 10000000000000000;
       var url = rawUrl.replace(/\[random]/ig, ord);
       this.state.vastClient.get(url.slice('VAST:'.length), { withCredentials: true }).then(function (response) {
-        _this3.parseResponse(response);
-        var _state2 = _this3.state,
-            framework = _state2.framework,
-            sources = _state2.sources,
-            tracker = _state2.tracker;
+        var _parseResponse = _this3.parseResponse(response),
+            tracker = _parseResponse.tracker,
+            sources = _parseResponse.sources,
+            framework = _parseResponse.framework;
 
-        if (framework === 'VPAID') {
-          _this3.loadVPAID(sources[0].src);
-        } else {
-          if (tracker) {
-            tracker.on('clickthrough', _this3.openAdLink);
+        if (!sources.length) return _this3.onEnded();
+        _this3.setState({ tracker: tracker, sources: sources, framework: framework }, function () {
+          console.log(_this3.state);
+          if (framework === 'VPAID') {
+            _this3.loadVPAID(sources[0].src);
+          } else {
+            if (tracker) {
+              tracker.on('clickthrough', _this3.openAdLink);
+            }
           }
-        }
+        });
       })['catch'](function (error) {
         return _this3.props.onError(error);
       });
@@ -4693,9 +4695,9 @@ var VAST = exports.VAST = function (_Component) {
   }, {
     key: 'play',
     value: function play() {
-      var _state3 = this.state,
-          framework = _state3.framework,
-          vpaidAdUnit = _state3.vpaidAdUnit;
+      var _state2 = this.state,
+          framework = _state2.framework,
+          vpaidAdUnit = _state2.vpaidAdUnit;
 
       if (framework === 'VPAID') {
         vpaidAdUnit.resumeAd();
@@ -4706,9 +4708,9 @@ var VAST = exports.VAST = function (_Component) {
   }, {
     key: 'pause',
     value: function pause() {
-      var _state4 = this.state,
-          framework = _state4.framework,
-          vpaidAdUnit = _state4.vpaidAdUnit;
+      var _state3 = this.state,
+          framework = _state3.framework,
+          vpaidAdUnit = _state3.vpaidAdUnit;
 
       if (framework === 'VPAID') {
         vpaidAdUnit.pauseAd();
@@ -4719,9 +4721,9 @@ var VAST = exports.VAST = function (_Component) {
   }, {
     key: 'stop',
     value: function stop() {
-      var _state5 = this.state,
-          framework = _state5.framework,
-          vpaidAdUnit = _state5.vpaidAdUnit;
+      var _state4 = this.state,
+          framework = _state4.framework,
+          vpaidAdUnit = _state4.vpaidAdUnit;
 
       if (framework === 'VPAID') {
         vpaidAdUnit.stopAd();
@@ -4746,9 +4748,9 @@ var VAST = exports.VAST = function (_Component) {
   }, {
     key: 'setVolume',
     value: function setVolume(fraction) {
-      var _state6 = this.state,
-          framework = _state6.framework,
-          vpaidAdUnit = _state6.vpaidAdUnit;
+      var _state5 = this.state,
+          framework = _state5.framework,
+          vpaidAdUnit = _state5.vpaidAdUnit;
 
       if (framework === 'VPAID') {
         vpaidAdUnit.setAdVolume(fraction);
@@ -4829,9 +4831,9 @@ var VAST = exports.VAST = function (_Component) {
   }, {
     key: 'renderVAST',
     value: function renderVAST() {
-      var _state7 = this.state,
-          sources = _state7.sources,
-          clickTrackingURLTemplate = _state7.tracker;
+      var _state6 = this.state,
+          sources = _state6.sources,
+          clickTrackingURLTemplate = _state6.tracker;
       var _props4 = this.props,
           width = _props4.width,
           height = _props4.height;
