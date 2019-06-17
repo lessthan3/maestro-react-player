@@ -279,7 +279,7 @@ export class FilePlayer extends Component {
         loop={loop}
         {...config.file.attributes}>
         {url instanceof Array &&
-        url.map(this.renderSourceElement)
+          url.map(this.renderSourceElement)
         }
         {config.file.tracks.map(this.renderTrack)}
       </Element>

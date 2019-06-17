@@ -58,17 +58,6 @@ export interface FileConfig {
   dashVersion?: string;
 }
 
-export interface Config {
-  soundcloud?: SoundCloudConfig;
-  youtube?: YouTubeConfig;
-  facebook?: FacebookConfig;
-  dailymotion?: DailyMotionConfig;
-  vimeo?: VimeoConfig;
-  file?: FileConfig;
-  wistia?: WistiaConfig;
-  mixcloud?: MixcloudConfig;
-}
-
 export interface ReactPlayerProps {
   url?: string | string[] | SourceProps[];
   playing?: boolean;
@@ -102,11 +91,22 @@ export interface ReactPlayerProps {
   onEnded?(): void;
   onEnablePIP?(): void;
   onDisablePIP?(): void;
-  onError?(error: any): void;
+  onError?(error: any, data?: any, hlsInstance?: any, hlsGlobal?: any): void;
   onDuration?(duration: number): void;
   onSeek?(seconds: number): void;
   onProgress?(state: { played: number, playedSeconds: number, loaded: number, loadedSeconds: number }): void;
   [otherProps: string]: any;
+}
+
+export interface Config {
+  soundcloud?: SoundCloudConfig;
+  youtube?: YouTubeConfig;
+  facebook?: FacebookConfig;
+  dailymotion?: DailyMotionConfig;
+  vimeo?: VimeoConfig;
+  file?: FileConfig;
+  wistia?: WistiaConfig;
+  mixcloud?: MixcloudConfig;
 }
 
 export default class ReactPlayer extends React.Component<ReactPlayerProps, any> {

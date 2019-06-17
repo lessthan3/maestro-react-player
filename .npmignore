@@ -1,4 +1,10 @@
+.travis.yml
+codecov.yml
+coverage
+index.html
+server.js
 src
 test
-server.js
+webpack.*
 webpack.config.*.js
+yarn-error.log

@@ -101,6 +101,7 @@
     "@alugha/ima": "^1.1.2",
     "deepmerge": "^3.0.0",
     "koa": "^2.7.0",
+    "deepmerge": "^3.0.0",
     "load-script": "^1.0.0",
     "prop-types": "^15.5.6"
   },

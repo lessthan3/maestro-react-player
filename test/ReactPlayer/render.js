@@ -4,7 +4,7 @@ import { configure, shallow } from 'enzyme'
 import Adapter from 'enzyme-adapter-react-16'
 import ReactPlayer from '../../src/ReactPlayer'
 import Player from '../../src/Player'
-import { Iframe } from '../../src/players/Iframe'
+import { FilePlayer } from '../../src/players/FilePlayer'
 import { DailyMotion } from '../../src/players/DailyMotion'
 import { SoundCloud } from '../../src/players/SoundCloud'
 import { Vimeo } from '../../src/players/Vimeo'
@@ -26,7 +26,7 @@ test('render', t => {
 test('fallback player', t => {
   const wrapper = shallow(<ReactPlayer url='http://example.com/random/path' />)
   t.true(wrapper.childAt(0).matchesElement(
-    <Player activePlayer={Iframe} onReady={wrapper.instance().onReady} />
+    <Player activePlayer={FilePlayer} onReady={wrapper.instance().onReady} />
   ))
 })
 

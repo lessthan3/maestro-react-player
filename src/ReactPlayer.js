@@ -5,7 +5,7 @@ import { getConfig, omit, isEqual } from './utils'
 import players from './players'
 import Player from './Player'
 import Preview from './Preview'
-import { Iframe } from './players/Iframe'
+import { FilePlayer } from './players/FilePlayer'
 import renderPreloadPlayers from './preload'
 
 const SUPPORTED_PROPS = Object.keys(propTypes)
@@ -90,7 +90,7 @@ export default class ReactPlayer extends Component {
       }
     }
     // Fall back to FilePlayer if nothing else can play the URL
-    return Iframe
+    return FilePlayer
   }
   wrapperRef = wrapper => {
     this.wrapper = wrapper
@@ -148,7 +148,7 @@ export { default as UstreamLive } from './players/UstreamLive'
 export { default as UstreamVideo } from './players/UstreamVideo'
 export { default as Iframe } from './players/Iframe'
 export { default as Mixcloud } from './players/Mixcloud'
-export { default as FilePlayer } from './players/FilePlayer'
 export { default as VAST } from './players/VAST'
 export { default as JWPlayer } from './players/JWPlayer'
 export { default as PhenixPlayer } from './players/PhenixPlayer'
+export { default as FilePlayer } from './players/FilePlayer'
