@@ -58,6 +58,17 @@ export interface FileConfig {
   dashVersion?: string;
 }
 
+export interface Config {
+  soundcloud?: SoundCloudConfig;
+  youtube?: YouTubeConfig;
+  facebook?: FacebookConfig;
+  dailymotion?: DailyMotionConfig;
+  vimeo?: VimeoConfig;
+  file?: FileConfig;
+  wistia?: WistiaConfig;
+  mixcloud?: MixcloudConfig;
+}
+
 export interface ReactPlayerProps {
   url?: string | string[] | SourceProps[];
   playing?: boolean;

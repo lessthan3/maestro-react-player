@@ -1,353 +1,978 @@
-<h1 align='center'>
-  ReactPlayer
-</h1>
-
-<p align='center'>
-  <a href='https://www.npmjs.com/package/react-player'>
-    <img src='https://img.shields.io/npm/v/react-player.svg' alt='Latest npm version'>
-  </a>
-  <a href='https://travis-ci.org/CookPete/react-player'>
-    <img src='https://img.shields.io/travis/CookPete/react-player/master.svg' alt='Build Status'>
-  </a>
-  <a href='https://david-dm.org/CookPete/react-player'>
-    <img src='https://img.shields.io/david/CookPete/react-player.svg' alt='Dependency Status'>
-  </a>
-  <a href='https://codecov.io/gh/CookPete/react-player'>
-    <img src='https://img.shields.io/codecov/c/github/cookpete/react-player.svg' alt='Test Coverage'>
-  </a>
-  <a href='https://paypal.me/ckpt'>
-    <img src='https://img.shields.io/badge/donate-PayPal-blue.svg' alt='Donate'>
-  </a>
-</p>
-
-<p align='center'>
-  A React component for playing a variety of URLs, including file paths, YouTube, Facebook, Twitch, SoundCloud, Streamable, Vimeo, Wistia, Mixcloud, and DailyMotion. Not using React? <a href='#standalone-player'>No problem.</a>
-</p>
-
-### Usage
-
-```bash
-npm install react-player --save
-# or
-yarn add react-player
-```
-
-```js
-import React, { Component } from 'react'
-import ReactPlayer from 'react-player'
-
-class App extends Component {
-  render () {
-    return <ReactPlayer url='https://www.youtube.com/watch?v=ysz5S6PUM-U' playing />
-  }
-}
-```
-
-Demo page: [`https://cookpete.com/react-player`](https://cookpete.com/react-player)
-
-The component parses a URL and loads in the appropriate markup and external SDKs to play media from [various sources](#supported-media). [Props](#props) can be passed in to control playback and react to events such as buffering or media ending. See [the demo source](https://github.com/CookPete/react-player/blob/master/src/demo/App.js) for a full example.
-
-For platforms without direct use of `npm` modules, a minified version of `ReactPlayer` is located in `dist` after installing. To generate this file yourself, checkout the repo and run `npm run build:dist`.
-
-#### Polyfills
-
-* If you are using `npm` and need to support [browsers without `Promise`](http://caniuse.com/#feat=promises) you will need a [`Promise` polyfill](https://github.com/stefanpenner/es6-promise).
-* To support IE11 you will need to use [`babel-polyfill`](https://babeljs.io/docs/usage/polyfill) or a similar ES2015+ polyfill.
-
-#### Autoplay
-
-As of Chrome 66, [videos must be `muted` in order to play automatically](https://www.theverge.com/2018/3/22/17150870/google-chrome-autoplay-videos-sound-mute-update). Some players, like Facebook, cannot be unmuted until the user interacts with the video, so you may want to enable `controls` to allow users to unmute videos themselves.
-
-### Props
-
-Prop | Description | Default
----- | ----------- | -------
-`url` | The url of a video or song to play<br/>&nbsp; ◦ &nbsp;Can be an [array](#multiple-sources-and-tracks) or [`MediaStream`](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream) object
-`playing` | Set to `true` or `false` to pause or play the media | `false`
-`loop` | Set to `true` or `false` to loop the media | `false`
-`controls` | Set to `true` or `false` to display native player controls<br />&nbsp; ◦ &nbsp;Vimeo, Twitch and Wistia player will always display controls | `false`
-`light` | Set to `true` to show just the video thumbnail, which loads the full player on click<br />&nbsp; ◦ &nbsp;Pass in an image URL to override the preview image | `false`
-`volume` | Set the volume of the player, between `0` and `1`<br/>&nbsp; ◦ &nbsp;`null` uses default volume on all players [`#357`](https://github.com/CookPete/react-player/issues/357) | `null`
-`muted` | Mutes the player<br/>&nbsp; ◦ &nbsp;Only works if `volume` is set | `false`
-`playbackRate` | Set the playback rate of the player<br />&nbsp; ◦ &nbsp;Only supported by YouTube, Wistia, and file paths | `1`
-`width` | Set the width of the player | `640px`
-`height` | Set the height of the player | `360px`
-`style` | Add [inline styles](https://facebook.github.io/react/tips/inline-styles.html) to the root element | `{}`
-`progressInterval` | The time between `onProgress` callbacks, in milliseconds | `1000`
-`playsinline` | Applies the `playsinline` attribute where supported | `false`
-`pip` | Set to `true` or `false` to enable or disable [picture-in-picture mode](https://developers.google.com/web/updates/2018/10/watch-video-using-picture-in-picture) | `false`
-`wrapper` | Element or component to use as the container element | `div`
-`config` | Override options for the various players, see [config prop](#config-prop)
-
-#### Callback props
-
-Callback props take a function that gets fired on various player events:
-
-Prop | Description
----- | -----------
-`onReady` | Called when media is loaded and ready to play. If `playing` is set to `true`, media will play immediately
-`onStart` | Called when media starts playing
-`onPlay` | Called when media starts or resumes playing after pausing or buffering
-`onProgress` | Callback containing `played` and `loaded` progress as a fraction, and `playedSeconds` and `loadedSeconds` in seconds<br />&nbsp; ◦ &nbsp;eg `{ played: 0.12, playedSeconds: 11.3, loaded: 0.34, loadedSeconds: 16.7 }`
-`onDuration` | Callback containing duration of the media, in seconds
-`onPause` | Called when media is paused
-`onBuffer` | Called when media starts buffering
-`onBufferEnd` | Called when media has finished buffering<br />&nbsp; ◦ &nbsp;Works for files, YouTube and Facebook
-`onSeek` | Called when media seeks with `seconds` parameter
-`onEnded` | Called when media finishes playing<br />&nbsp; ◦ &nbsp;Does not fire when `loop` is set to `true`
-`onError` | Called when an error occurs whilst attempting to play media
-`onEnablePIP` | Called when picture-in-picture mode is enabled
-`onDisablePIP` | Called when picture-in-picture mode is disabled
-
-#### Config prop
-
-As of version `0.24`, there is a single `config` prop to override the settings for the various players. If you are migrating from an earlier version, you must move all the old config props inside `config`:
-
-```jsx
-<ReactPlayer
-  url={url}
-  config={{
-    youtube: {
-      playerVars: { showinfo: 1 }
-    },
-    facebook: {
-      appId: '12345'
-    }
-  }}
-/>
-```
-
-The old style [config props](https://github.com/CookPete/react-player/tree/v0.23.0#config-props) still work but will produce a console warning:
-
-```jsx
-<ReactPlayer
-  url={url}
-  youtubeConfig={{ playerVars: { showinfo: 1 } }}
-  facebookConfig={{ appId: '12345' }}
-/>
-```
-
-Settings for each player live under different keys:
-
-Key | Options
---- | -------
-`youtube` | `playerVars`: Override the [default player vars](https://developers.google.com/youtube/player_parameters?playerVersion=HTML5)<br />`embedOptions`: Override the [default embed options](https://developers.google.com/youtube/iframe_api_reference#Loading_a_Video_Player)<br />`preload`: Used for [preloading](#preloading)
-`facebook` | `appId`: Your own [Facebook app ID](https://developers.facebook.com/docs/apps/register#app-id)
-`soundcloud` | `options`: Override the [default player options](https://developers.soundcloud.com/docs/api/html5-widget#params)<br />`preload`: Used for [preloading](#preloading)
-`vimeo` | `playerOptions`: Override the [default params](https://developer.vimeo.com/player/embedding#universal-parameters)<br />`preload`: Used for [preloading](#preloading)
-`wistia` | `options`: Override the [default player options](https://wistia.com/doc/embed-options#options_list)
-`mixcloud` | `options`: Override the [default player options](https://www.mixcloud.com/developers/widget/#methods)
-`dailymotion` | `params`: Override the [default player vars](https://developer.dailymotion.com/player#player-parameters)<br />`preload`: Used for [preloading](#preloading)
-`twitch` | `options`: Override the [default player options](https://dev.twitch.tv/docs/embed)
-`file` | `attributes`: Apply [element attributes](https://developer.mozilla.org/en/docs/Web/HTML/Element/video#Attributes)<br />`forceVideo`: Always render a `<video>` element<br />`forceAudio`: Always render an `<audio>` element<br />`forceHLS`: Use [hls.js](https://github.com/video-dev/hls.js) for HLS streams<br />`forceDASH`: Always use [dash.js](https://github.com/Dash-Industry-Forum/dash.js) for DASH streams<br />`hlsOptions`: Override the [default `hls.js` options](https://github.com/video-dev/hls.js/blob/master/docs/API.md#fine-tuning)<br />`hlsVersion`: Override the [`hls.js`](https://github.com/video-dev/hls.js) version loaded from [`cdnjs`](https://cdnjs.com/libraries/hls.js), default: `0.10.1`<br />`dashVersion`: Override the [`dash.js`](https://github.com/Dash-Industry-Forum/dash.js) version loaded from [`cdnjs`](https://cdnjs.com/libraries/dashjs), default: `2.9.2`
-
-##### Preloading
-
-When `preload` is set to `true` for players that support it, a short, silent video is played in the background when `ReactPlayer` first mounts. This fixes a [bug](https://github.com/CookPete/react-player/issues/7) where videos would not play when loaded in a background browser tab.
-
-### Methods
-
-#### Static Methods
-
-Method | Description
------- | -----------
-`ReactPlayer.canPlay(url)` | Determine if a URL can be played. This does *not* detect media that is unplayable due to privacy settings, streaming permissions, etc. In that case, the `onError` prop will be invoked after attemping to play. Any URL that does not match any patterns will fall back to a native HTML5 media player.
-`ReactPlayer.canEnablePiP(url)` | Determine if a URL can be played in [picture-in-picture mode](https://developers.google.com/web/updates/2018/10/watch-video-using-picture-in-picture)
-`ReactPlayer.addCustomPlayer(CustomPlayer)` | Add a custom player. See [Adding custom players](#adding-custom-players)
-`ReactPlayer.removeCustomPlayers()` | Remove any players that have been added using `addCustomPlayer()`
+### Changelog
 
-#### Instance Methods
+All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
-Use [`ref`](https://facebook.github.io/react/docs/refs-and-the-dom.html) to call instance methods on the player. See [the demo app](src/demo/App.js) for an example of this.
-
-Method | Description
------- | -----------
-`seekTo(amount, type)` | Seek to the given number of seconds, or fraction if `amount` is between `0` and `1`<br />&nbsp; ◦ &nbsp;`type` parameter lets you specify `'seconds'` or `'fraction'` to override default behaviour
-`getCurrentTime()` | Returns the number of seconds that have been played<br />&nbsp; ◦ &nbsp;Returns `null` if unavailable
-`getSecondsLoaded()` | Returns the number of seconds that have been loaded<br />&nbsp; ◦ &nbsp;Returns `null` if unavailable or unsupported
-`getDuration()` | Returns the duration (in seconds) of the currently playing media<br />&nbsp; ◦ &nbsp;Returns `null` if duration is unavailable
-`getInternalPlayer()` | Returns the internal player of whatever is currently playing<br />&nbsp; ◦ &nbsp;eg the [YouTube player instance](https://developers.google.com/youtube/iframe_api_reference#Loading_a_Video_Player), or the [`<video>`](https://developer.mozilla.org/en/docs/Web/HTML/Element/video) element when playing a video file<br />&nbsp; ◦ &nbsp;Use `getInternalPlayer('hls')` to get the [hls.js](https://github.com/video-dev/hls.js) player<br />&nbsp; ◦ &nbsp;Use `getInternalPlayer('dash')` to get the [dash.js](https://github.com/Dash-Industry-Forum/dash.js) player<br />&nbsp; ◦ &nbsp;Returns `null` if the internal player is unavailable
+Generated by [`auto-changelog`](https://github.com/CookPete/auto-changelog).
 
-### Advanced Usage
+#### [v1.11.1](https://github.com/CookPete/react-player/compare/v1.11.0...v1.11.1)
 
-#### Light player
+> 13 June 2019
 
-The `light` prop will render a video thumbnail with simple play icon, and only load the full player once a user has interacted with the image. [Noembed](https://noembed.com) is used to fetch thumbnails for a video URL. Note that automatic thumbnail fetching for Facebook, Wistia, Mixcloud and file URLs are not supported, and ongoing support for other URLs is not guaranteed.
+- Do not use vimeo API to play vimeo hosted video files. [`#597`](https://github.com/CookPete/react-player/pull/597)
+- Catches error on Vimeo play() [`#645`](https://github.com/CookPete/react-player/pull/645)
+- Update Meteor section in readme [`#647`](https://github.com/CookPete/react-player/pull/647)
+- [d.ts] Fix typing of arguments of onError handler [`#655`](https://github.com/CookPete/react-player/pull/655)
+- Fix twitch permanent loading state when stream is offline [`#657`](https://github.com/CookPete/react-player/pull/657)
+- Fix an issue with setting state in the Preview component after being unmounted. [`#658`](https://github.com/CookPete/react-player/pull/658)
+- Prevent double inline styles being applied [`#609`](https://github.com/CookPete/react-player/issues/609)
+- Fix onProgress for infinite duration streams [`#503`](https://github.com/CookPete/react-player/issues/503)
+- Fix light mode poster not updating [`#646`](https://github.com/CookPete/react-player/issues/646)
+- Fix youtube looping [`#530`](https://github.com/CookPete/react-player/issues/530) [`#639`](https://github.com/CookPete/react-player/issues/639) [`#662`](https://github.com/CookPete/react-player/pull/662)
+- Fix multiple onError params not being passed through [`#627`](https://github.com/CookPete/react-player/issues/627)
 
-If you want to pass in your own thumbnail to use, set `light` to the image URL rather than `true`.
+#### [v1.11.0](https://github.com/CookPete/react-player/compare/v1.10.0...v1.11.0)
 
-The styles for the preview image and play icon can be overridden by targeting the CSS classes `react-player__preview`, `react-player__shadow` and `react-player__play-icon`.
+> 10 April 2019
 
-#### Responsive player
+- Soundcloud - fix autoplay delegation [`#614`](https://github.com/CookPete/react-player/pull/614)
+- Implemented onBufferEnd cb prop for FilePlayer, YouTube and Facebook [`#615`](https://github.com/CookPete/react-player/pull/615)
+- Add on error callback to wistia player [`#617`](https://github.com/CookPete/react-player/pull/617)
+- align typings for seekTo method with code [`#619`](https://github.com/CookPete/react-player/pull/619)
+- Really really small typo in README.md [`#606`](https://github.com/CookPete/react-player/pull/606)
+- Add issue template [`ba6c274`](https://github.com/CookPete/react-player/commit/ba6c2747f18c5d005866b88bca58a9f2342611a1)
 
-Set `width` and `height` to `100%` and wrap the player in a [fixed aspect ratio box](https://css-tricks.com/aspect-ratio-boxes) to get a responsive player:
+#### [v1.10.0](https://github.com/CookPete/react-player/compare/v1.9.3...v1.10.0)
 
-```js
-class ResponsivePlayer extends Component {
-  render () {
-    return (
-      <div className='player-wrapper'>
-        <ReactPlayer
-          className='react-player'
-          url='https://www.youtube.com/watch?v=ysz5S6PUM-U'
-          width='100%'
-          height='100%'
-        />
-      </div>
-    )
-  }
-}
-```
+> 24 March 2019
 
-```css
-.player-wrapper {
-  position: relative;
-  padding-top: 56.25% /* Player ratio: 100 / (1280 / 720) */
-}
+- Add playsinline support to vimeo [`#574`](https://github.com/CookPete/react-player/issues/574)
+- Use normal wrapper for light mode [`#584`](https://github.com/CookPete/react-player/issues/584)
+- Pass controls prop through to preload players [`#587`](https://github.com/CookPete/react-player/issues/587)
+- Add Soundcloud preload to props files [`#588`](https://github.com/CookPete/react-player/issues/588)
+- Add type parameter to seekTo method [`#591`](https://github.com/CookPete/react-player/issues/591)
+- Set isLoading to false after error [`#595`](https://github.com/CookPete/react-player/issues/595)
+- Unbind wistia player events correctly [`#594`](https://github.com/CookPete/react-player/issues/594)
 
-.react-player {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-```
+#### [v1.9.3](https://github.com/CookPete/react-player/compare/v1.9.2...v1.9.3)
 
-See [`jsFiddle` example](https://jsfiddle.net/e6w3rtj1/)
+> 27 January 2019
 
-#### Single player imports
+- Bump auto-changelog [`3486039`](https://github.com/CookPete/react-player/commit/3486039e99a7fb784df54830ffa136408477d55b)
 
-If you are only ever playing a single type of URL, you can import individual players to keep your bundle size down:
+#### [v1.9.2](https://github.com/CookPete/react-player/compare/v1.9.1...v1.9.2)
 
-```jsx
-import YouTubePlayer from 'react-player/lib/players/YouTube'
+> 27 January 2019
 
-<YouTubePlayer
-  url='https://www.youtube.com/watch?v=d46Azg3Pm4c'
-  playing
-  controls
-  // Other ReactPlayer props will work here
-/>
-```
-
-See a list of available players [here](https://github.com/CookPete/react-player/tree/master/src/players).
+- Support player setLoop methods [`#560`](https://github.com/CookPete/react-player/issues/560)
+- Upgrade screenfull [`#560`](https://github.com/CookPete/react-player/issues/560)
 
-#### Standalone player
-
-If you aren’t using React, you can still render a player using the standalone library:
-
-```html
-<script src='https://unpkg.com/react-player/dist/ReactPlayer.standalone.js'></script>
-<script>
-  const container = document.getElementById('container')
-  const url = 'https://www.youtube.com/watch?v=d46Azg3Pm4c'
-
-  renderReactPlayer(container, { url, playing: true })
-
-  function pausePlayer () {
-    renderReactPlayer(container, { url, playing: false })
-  }
-</script>
-```
-
-See [`jsFiddle` example](https://jsfiddle.net/krkcvx9s/)
-
-#### Adding custom players
-
-If you have your own player that is compatible with ReactPlayer’s internal architecture, you can add it using `addCustomPlayer`:
-
-```javascript
-import YourOwnPlayer from './somewhere';
-ReactPlayer.addCustomPlayer(YourOwnPlayer);
-```
-
-Use `removeCustomPlayers` to clear all custom players:
-
-```javascript
-ReactPlayer.removeCustomPlayers();
-```
-
-It is your responsibility to ensure that custom players keep up with any internal changes to ReactPlayer in later versions.
-
-#### Using Bower
-
-```bash
-bower install react-player --save
-```
-
-```html
-<script src='bower_components/react/react.js'></script>
-<script src='bower_components/react/react-dom.js'></script>
-<script src='bower_components/react-player/dist/ReactPlayer.js'></script>
-<script>
-  ReactDOM.render(
-    <ReactPlayer url='https://www.youtube.com/watch?v=d46Azg3Pm4c' playing />,
-    document.getElementById('container')
-  )
-</script>
-```
-
-#### Mobile considerations
-
-Due to various restrictions, `ReactPlayer` is not guaranteed to function properly on mobile devices. The [YouTube player documentation](https://developers.google.com/youtube/iframe_api_reference), for example, explains that [certain mobile browsers require user interaction](https://developers.google.com/youtube/iframe_api_reference#Mobile_considerations) before playing:
-
-> The HTML5 `<video>` element, in certain mobile browsers (such as Chrome and Safari), only allows playback to take place if it’s initiated by a user interaction (such as tapping on the player).
-
-#### Multiple Sources and Tracks
-
-When playing file paths, an array of sources can be passed to the `url` prop to render multiple `<source>` tags.
-
-```jsx
-<ReactPlayer playing url={['foo.webm', 'foo.ogg']} />
-```
-
-You can also specify a `type` for each source by using objects with `src` and `type` properties.
-
-```jsx
-<ReactPlayer
-  playing
-  url={[
-    {src: 'foo.webm', type: 'video/webm'},
-    {src: 'foo.ogg', type: 'video/ogg'}
-  ]}
-/>
-```
-
-[`<track>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/track) elements for subtitles can be added using `fileConfig`:
-
-```jsx
-<ReactPlayer
-  playing
-  url='foo.webm'
-  config={{ file: {
-    tracks: [
-      {kind: 'subtitles', src: 'subs/subtitles.en.vtt', srcLang: 'en', default: true},
-      {kind: 'subtitles', src: 'subs/subtitles.ja.vtt', srcLang: 'ja'},
-      {kind: 'subtitles', src: 'subs/subtitles.de.vtt', srcLang: 'de'}
-    ]
-  }}}
-/>
-```
-
-### Supported media
-
-* YouTube videos use the [YouTube iFrame Player API](https://developers.google.com/youtube/iframe_api_reference)
-* Facebook videos use the [Facebook Embedded Video Player API](https://developers.facebook.com/docs/plugins/embedded-video-player/api)
-* SoundCloud tracks use the [SoundCloud Widget API](https://developers.soundcloud.com/docs/api/html5-widget)
-* Streamable videos use [`Player.js`](https://github.com/embedly/player.js)
-* Vidme videos are [no longer supported](https://medium.com/vidme/goodbye-for-now-120b40becafa)
-* Vimeo videos use the [Vimeo Player API](https://developer.vimeo.com/player/js-api)
-* Wistia videos use the [Wistia Player API](https://wistia.com/doc/player-api)
-* Twitch videos use the [Twitch Interactive Frames API](https://dev.twitch.tv/docs/embed#interactive-frames-for-live-streams-and-vods)
-* DailyMotion videos use the [DailyMotion Player API](https://developer.dailymotion.com/player)
-* [Supported file types](https://developer.mozilla.org/en-US/docs/Web/HTML/Supported_media_formats) are playing using [`<video>`](https://developer.mozilla.org/en/docs/Web/HTML/Element/video) or [`<audio>`](https://developer.mozilla.org/en/docs/Web/HTML/Element/audio) elements
-  * HLS streams are played using [`hls.js`](https://github.com/video-dev/hls.js)
-  * DASH streams are played using [`dash.js`](https://github.com/Dash-Industry-Forum/dash.js)
-
-### Contributing
-
-See the [contribution guidelines](https://github.com/CookPete/react-player/blob/master/CONTRIBUTING.md) before creating a pull request.
-
-### Thanks
-
-- Many thanks to [Kostya Luchankin](https://github.com/phationmationion) for help overhauling the player inheritance patterns.
-- Thanks to anyone who has [contributed](https://github.com/CookPete/react-player/graphs/contributors).
+#### [v1.9.1](https://github.com/CookPete/react-player/compare/v1.9.0...v1.9.1)
+
+> 25 January 2019
+
+- Use https for noembed fetching [`#558`](https://github.com/CookPete/react-player/issues/558) [`#448`](https://github.com/CookPete/react-player/issues/448)
+- Add controls toggle and light mode to demo app [`0ba5b71`](https://github.com/CookPete/react-player/commit/0ba5b719d561021b6918e5bbd981278710e4ddec)
+- Show preview when switching from non-light to light [`4a39dc4`](https://github.com/CookPete/react-player/commit/4a39dc4c52092f65b374651f54e02b8aca6eff76)
+
+#### [v1.9.0](https://github.com/CookPete/react-player/compare/v1.8.0...v1.9.0)
+
+> 24 January 2019
+
+- Allows wrapper proptype to be a ForwardRef component [`#556`](https://github.com/CookPete/react-player/pull/556)
+- playsinline for Android wechat [`#544`](https://github.com/CookPete/react-player/pull/544)
+- Fix broken URL for standalone script [`#546`](https://github.com/CookPete/react-player/pull/546)
+- Accept youtube.com/playlist?list= URLs [`#541`](https://github.com/CookPete/react-player/pull/541)
+- Add youtube embedOptions config option [`#557`](https://github.com/CookPete/react-player/pull/557) [`#272`](https://github.com/CookPete/react-player/issues/272)
+- Bump deepmerge [`7722679`](https://github.com/CookPete/react-player/commit/77226796f9542a59bde28be6bfbd74f24f994d16)
+- Youtube playlist fixes [`04bf181`](https://github.com/CookPete/react-player/commit/04bf181a3d27856a86ef81b8c141b7bf68947198)
+
+#### [v1.8.0](https://github.com/CookPete/react-player/compare/v1.7.1...v1.8.0)
+
+> 19 December 2018
+
+- Add light prop [`#448`](https://github.com/CookPete/react-player/issues/448)
+
+#### [v1.7.1](https://github.com/CookPete/react-player/compare/v1.7.0...v1.7.1)
+
+> 5 December 2018
+
+- Parse youtube playlist from URL list param [`#318`](https://github.com/CookPete/react-player/issues/318)
+- Loop youtube playlists correctly [`#530`](https://github.com/CookPete/react-player/issues/530)
+- Fix dist build [`29fb971`](https://github.com/CookPete/react-player/commit/29fb971efae61ae90b66fca07f2bc36c55b7cc21)
+- Update npmignore [`32e8286`](https://github.com/CookPete/react-player/commit/32e8286e81a03879e13dd0e0b3647ffd2bfd2248)
+
+#### [v1.7.0](https://github.com/CookPete/react-player/compare/v1.6.6...v1.7.0)
+
+> 17 November 2018
+
+- Support Chrome Picture In Picture (PIP) mode [`#504`](https://github.com/CookPete/react-player/pull/504)
+- Typings - label in TrackProps [`#489`](https://github.com/CookPete/react-player/pull/489)
+- fix: fix onProgress callback not firing during iOS live streams [`#497`](https://github.com/CookPete/react-player/pull/497)
+- Update vimeo preload URL [`#509`](https://github.com/CookPete/react-player/pull/509)
+- add absent methods signature [`#507`](https://github.com/CookPete/react-player/pull/507)
+- Add hlsVersion and dashVersion file config [`#513`](https://github.com/CookPete/react-player/pull/513)
+- Export single player exports to main file [`#421`](https://github.com/CookPete/react-player/issues/421)
+- Refresh vimeo duration on play [`#514`](https://github.com/CookPete/react-player/issues/514)
+- Use PLAYING event instead of PLAY for Twitch player [`#498`](https://github.com/CookPete/react-player/issues/498)
+- Do not call onEnded when looping [`#496`](https://github.com/CookPete/react-player/issues/496)
+- Prevent singlePlayer from returning null when forcing via config [`#500`](https://github.com/CookPete/react-player/issues/500)
+
+#### [v1.6.6](https://github.com/CookPete/react-player/compare/v1.6.5...v1.6.6)
+
+> 20 September 2018
+
+- Add coverage to npmignore [`580e21c`](https://github.com/CookPete/react-player/commit/580e21c60842492b325d039fa0361fd547cb79ed)
+
+#### [v1.6.5](https://github.com/CookPete/react-player/compare/v1.6.4...v1.6.5)
+
+> 20 September 2018
+
+- Fix: signal multiple sources change to the browser [`#482`](https://github.com/CookPete/react-player/pull/482)
+- Check null before accessing FilePlayer properties [`#465`](https://github.com/CookPete/react-player/pull/465)
+-  Adds hlsOptions to FileConfig def [`#483`](https://github.com/CookPete/react-player/pull/483)
+- Updated hls.js documentation link in README.md [`#440`](https://github.com/CookPete/react-player/pull/440)
+- Prevent YouTube from playing after seekTo when paused [`#437`](https://github.com/CookPete/react-player/issues/437)
+- Fix facebook iframe visibility bug [`#455`](https://github.com/CookPete/react-player/issues/455)
+- Update dailymotion regex [`#438`](https://github.com/CookPete/react-player/issues/438)
+- Fix issues with non-embeddable Facebook videos [`48401ab`](https://github.com/CookPete/react-player/commit/48401abdfc3f08675fddd8a130588cc53faf2e5b)
+- Enable partial line coverage with codecov [`488f82d`](https://github.com/CookPete/react-player/commit/488f82da421ac9a27c2e52137767d19cc7f47a3e)
+- Run tests before versioning [`4055469`](https://github.com/CookPete/react-player/commit/405546969a3fc6f26ee72b2b47a752c284b2835d)
+
+#### [v1.6.4](https://github.com/CookPete/react-player/compare/v1.6.3...v1.6.4)
+
+> 7 June 2018
+
+- YouTube videos not forwarding `end` param [`#420`](https://github.com/CookPete/react-player/pull/420)
+
+#### [v1.6.3](https://github.com/CookPete/react-player/compare/v1.6.2...v1.6.3)
+
+> 6 June 2018
+
+- Set FilePlayer autoPlay correctly [`#405`](https://github.com/CookPete/react-player/issues/405)
+- Tidy up start and end timestamp logic [`#412`](https://github.com/CookPete/react-player/issues/412)
+- Improve MediaStream guards [`#415`](https://github.com/CookPete/react-player/issues/415)
+- Overhaul tests [`4bd78e0`](https://github.com/CookPete/react-player/commit/4bd78e0acbd4dd3399582564d0a0686b616361b0)
+- Remove requirement for window global [`9618272`](https://github.com/CookPete/react-player/commit/9618272e6e4b518e493d3130b96dd2ebeb97b506)
+- Player component tweaks [`1ac1480`](https://github.com/CookPete/react-player/commit/1ac148019e67ed75f31885a201755ec065c2f581)
+
+#### [v1.6.2](https://github.com/CookPete/react-player/compare/v1.6.1...v1.6.2)
+
+> 27 May 2018
+
+- Pass instance through to onReady callback [`#407`](https://github.com/CookPete/react-player/issues/407)
+- Mute preload players [`16f5fcb`](https://github.com/CookPete/react-player/commit/16f5fcb6bfdda69702d0741c7587218cf7f62d6f)
+
+#### [v1.6.1](https://github.com/CookPete/react-player/compare/v1.6.0...v1.6.1)
+
+> 20 May 2018
+
+- Bump HLS.js [`#403`](https://github.com/CookPete/react-player/pull/403)
+
+#### [v1.6.0](https://github.com/CookPete/react-player/compare/v1.5.1...v1.6.0)
+
+> 17 May 2018
+
+- Add support for MediaStream objects [`#398`](https://github.com/CookPete/react-player/issues/398)
+- Prevent errors when switching URLs whilst loading [`#377`](https://github.com/CookPete/react-player/issues/377)
+- Prevent loading SDKs multiple times [`#391`](https://github.com/CookPete/react-player/issues/391)
+
+#### [v1.5.1](https://github.com/CookPete/react-player/compare/v1.5.0...v1.5.1)
+
+> 15 May 2018
+
+- Add proper mute support to fix autoplay [`#395`](https://github.com/CookPete/react-player/issues/395) [`#389`](https://github.com/CookPete/react-player/issues/389)
+- Mute player for tests [`58c6a58`](https://github.com/CookPete/react-player/commit/58c6a58d45cfb09517e1023495036dcf66bf3f5f)
+- Fix vimeo config options property [`a645eee`](https://github.com/CookPete/react-player/commit/a645eeead7793bd57ff64dbe3bec0c2077cb8a25)
+- Skip soundcloud tests [`3958f8d`](https://github.com/CookPete/react-player/commit/3958f8dea68aba7d641b5292f7aacf001d18123f)
+
+#### [v1.5.0](https://github.com/CookPete/react-player/compare/v1.4.0...v1.5.0)
+
+> 23 April 2018
+
+- Fix FilePlayer getSecondsLoaded [`#380`](https://github.com/CookPete/react-player/pull/380)
+- Add support for dropbox files [`#379`](https://github.com/CookPete/react-player/issues/379)
+- Tidy up getSecondsLoaded [`93351f9`](https://github.com/CookPete/react-player/commit/93351f92b7841cd6f99cf805bf3922d46fdec2cc)
+- Update readme [`de639e4`](https://github.com/CookPete/react-player/commit/de639e41915ecc315f5a84a535d936c455d653e2)
+
+#### [v1.4.0](https://github.com/CookPete/react-player/compare/v1.3.2...v1.4.0)
+
+> 11 April 2018
+
+- Add support for custom players [`#364`](https://github.com/CookPete/react-player/pull/364)
+- Add instance methods to single player imports [`#376`](https://github.com/CookPete/react-player/issues/376)
+- Fix tests [`597bf33`](https://github.com/CookPete/react-player/commit/597bf332b839c89b91aae4934b0e324bd43d635f)
+
+#### [v1.3.2](https://github.com/CookPete/react-player/compare/v1.3.1...v1.3.2)
+
+> 5 April 2018
+
+- Render video element when poster is set [`#369`](https://github.com/CookPete/react-player/issues/369)
+- Add https to Twitch SDK URL [`#367`](https://github.com/CookPete/react-player/issues/367)
+- Add forceVideo option for FilePlayer [`a743396`](https://github.com/CookPete/react-player/commit/a74339606a6c7c773ea11d1eee1f43dde859a53b)
+- Remove migration note [`308bca9`](https://github.com/CookPete/react-player/commit/308bca9af64f04382a1f3d141942860c85372fc2)
+
+#### [v1.3.1](https://github.com/CookPete/react-player/compare/v1.3.0...v1.3.1)
+
+> 22 March 2018
+
+- Fix file player load sequence on iOS [`#340`](https://github.com/CookPete/react-player/issues/340)
+- Do not use Vimeo player for vimeo.com file paths [`#358`](https://github.com/CookPete/react-player/issues/358)
+
+#### [v1.3.0](https://github.com/CookPete/react-player/compare/v1.2.1...v1.3.0)
+
+> 15 March 2018
+
+- Include Mixcloud in README [`#342`](https://github.com/CookPete/react-player/pull/342)
+- Add support for twitch player options [`#343`](https://github.com/CookPete/react-player/issues/343)
+- Add single player wrapper div [`#346`](https://github.com/CookPete/react-player/issues/346)
+- Loosen up the vimeo URL pattern [`#349`](https://github.com/CookPete/react-player/issues/349) [`#348`](https://github.com/CookPete/react-player/pull/348)
+- Pass through HLS errors to onError [`#354`](https://github.com/CookPete/react-player/issues/354) [`#355`](https://github.com/CookPete/react-player/pull/355)
+- Set volume to null by default [`#357`](https://github.com/CookPete/react-player/issues/357)
+- Escape dots in URL patterns [`129a179`](https://github.com/CookPete/react-player/commit/129a179ba64e67554f79af44855450c203cab948)
+- Tweak tests [`3b92c4a`](https://github.com/CookPete/react-player/commit/3b92c4af5a5d551f2598174d1da9377476c4ed87)
+- Unmute facebook player when ready [`a672ee1`](https://github.com/CookPete/react-player/commit/a672ee1d4e1ea0e5a5b473bf76bc644caf5606d6)
+
+#### [v1.2.1](https://github.com/CookPete/react-player/compare/v1.2.0...v1.2.1)
+
+> 26 February 2018
+
+- Add progressInterval logic back in to onProgress [`#339`](https://github.com/CookPete/react-player/issues/339)
+- Skip mixcloud tests [`34b51a4`](https://github.com/CookPete/react-player/commit/34b51a4dad80cf2f0dc5cbef82cc5fe041397f7c)
+
+#### [v1.2.0](https://github.com/CookPete/react-player/compare/v1.1.3...v1.2.0)
+
+> 23 February 2018
+
+- Fixes the onPause event propogation [`#336`](https://github.com/CookPete/react-player/pull/336)
+- Support custom wrappers [`#334`](https://github.com/CookPete/react-player/pull/334)
+- Add Mixcloud player [`#335`](https://github.com/CookPete/react-player/issues/335)
+- Add support for importing single players [`#311`](https://github.com/CookPete/react-player/issues/311)
+- Move onProgress logic into Player component [`42a030e`](https://github.com/CookPete/react-player/commit/42a030e6cfa721eb15c6af2b27c828160ebcae25)
+
+#### [v1.1.3](https://github.com/CookPete/react-player/compare/v1.1.2...v1.1.3)
+
+> 21 February 2018
+
+- Match YouTube URL with extra parameters [`#332`](https://github.com/CookPete/react-player/pull/332)
+- Update mp3 example [`#330`](https://github.com/CookPete/react-player/issues/330)
+- Update stored config when props change [`#329`](https://github.com/CookPete/react-player/issues/329)
+- Pass through all source props when using array of objects [`#333`](https://github.com/CookPete/react-player/issues/333)
+- Skip wistia tests [`6e536d1`](https://github.com/CookPete/react-player/commit/6e536d11d339f4eb4e62cc6fc448c0597bc276b7)
+- Fix soundcloud canPlay test [`1f158d1`](https://github.com/CookPete/react-player/commit/1f158d1b8bb353553ea5680ed9041db26055da53)
+
+#### [v1.1.2](https://github.com/CookPete/react-player/compare/v1.1.1...v1.1.2)
+
+> 8 February 2018
+
+- Add config.file.hlsOptions [`#325`](https://github.com/CookPete/react-player/issues/325) [`#319`](https://github.com/CookPete/react-player/issues/319)
+- Send any soundcloud URL to the widget [`#322`](https://github.com/CookPete/react-player/issues/322) [`#324`](https://github.com/CookPete/react-player/pull/324)
+- Change progressFrequency to progressInterval [`#317`](https://github.com/CookPete/react-player/issues/317)
+- Guard against navigator not being available [`#315`](https://github.com/CookPete/react-player/issues/315)
+- Update hls, dash and streamable SDKs [`22dd274`](https://github.com/CookPete/react-player/commit/22dd274d20a15e664ac20f448289e529684e9444)
+
+#### [v1.1.1](https://github.com/CookPete/react-player/compare/v1.1.0...v1.1.1)
+
+> 18 January 2018
+
+- Skip unreliable tests [`81c8a0b`](https://github.com/CookPete/react-player/commit/81c8a0bf389634604e245fe4211b07f44bbcfd9d)
+- Update readme [`cf8a93f`](https://github.com/CookPete/react-player/commit/cf8a93fd39534cc2a72182675e3274a1cdad9ffb)
+
+#### [v1.1.0](https://github.com/CookPete/react-player/compare/v1.0.0...v1.1.0)
+
+> 18 January 2018
+
+- Tidy up readme [`5befbfa`](https://github.com/CookPete/react-player/commit/5befbfab44313a48d7770cf00f3cda200ebc3bbb)
+- Add standalone player [`4ffd201`](https://github.com/CookPete/react-player/commit/4ffd20112f18c2c7b3c25e39c283f8cfe9be88fc)
+- Update description and keywords [`0194b43`](https://github.com/CookPete/react-player/commit/0194b43758fccbbda755d13d9eb0d2a4a80aba77)
+
+#### [v1.0.0](https://github.com/CookPete/react-player/compare/v1.0.0-beta.7...v1.0.0)
+
+> 17 January 2018
+
+- Do not load hls.js on iOS [`#293`](https://github.com/CookPete/react-player/pull/293)
+- Better prop comparison for shouldComponentUpdate [`#302`](https://github.com/CookPete/react-player/issues/302)
+- Less aggressive URL matching [`#297`](https://github.com/CookPete/react-player/issues/297)
+- Remove vidme player [`#294`](https://github.com/CookPete/react-player/issues/294)
+- Bump packages [`7050614`](https://github.com/CookPete/react-player/commit/7050614360bbdfb7f68c3e6c2b6fd5057c23015c)
+- Bump packages [`c309053`](https://github.com/CookPete/react-player/commit/c30905356e59a3a71a8821df827cee72e3c5ec3f)
+- Use postcss-loader in favour of sass-loader [`d691af4`](https://github.com/CookPete/react-player/commit/d691af41555871e0163fbc1a70702f784087a645)
+
+#### [v1.0.0-beta.7](https://github.com/CookPete/react-player/compare/v1.0.0-beta.6...v1.0.0-beta.7)
+
+> 14 December 2017
+
+- Refactor player tests [`e2b6de6`](https://github.com/CookPete/react-player/commit/e2b6de61dad6802e59b438df5e0f19537857066b)
+- Add more tests [`d8b79db`](https://github.com/CookPete/react-player/commit/d8b79db444494b6061583e6496fde5542ead69b8)
+- Fix getInternalPlayer method [`bbed43f`](https://github.com/CookPete/react-player/commit/bbed43f6db3fd5de84cfeeae2172d9a64df1e852)
+
+#### [v1.0.0-beta.6](https://github.com/CookPete/react-player/compare/v1.0.0-beta.5...v1.0.0-beta.6)
+
+> 5 December 2017
+
+- Vimeo On Demand URL Support [`#289`](https://github.com/CookPete/react-player/pull/289)
+- Use index keys for FilePlayer source array [`#276`](https://github.com/CookPete/react-player/issues/276)
+- Add more tests [`2e88e5e`](https://github.com/CookPete/react-player/commit/2e88e5e771fe4c6fc08ff681820e62e5b7d45fec)
+- Add url switch tests [`78c483c`](https://github.com/CookPete/react-player/commit/78c483c09ee64ca27bffbddbd0583165082caf8d)
+- Bump auto-changelog [`cd26b44`](https://github.com/CookPete/react-player/commit/cd26b44ea7a10b6430329f935c57fd017b5b3f64)
+
+#### [v1.0.0-beta.5](https://github.com/CookPete/react-player/compare/v1.0.0-beta.4...v1.0.0-beta.5)
+
+> 10 November 2017
+
+- Set internal isPlaying flag to false on ended [`#271`](https://github.com/CookPete/react-player/issues/271)
+- Bump auto-changelog [`e246e43`](https://github.com/CookPete/react-player/commit/e246e43ae227867a1b468bbfa7948bcb2e647c5b)
+
+#### [v1.0.0-beta.4](https://github.com/CookPete/react-player/compare/v1.0.0-beta.3...v1.0.0-beta.4)
+
+> 8 November 2017
+
+- Update twitch URL pattern [`#267`](https://github.com/CookPete/react-player/issues/267)
+- Retain player order to prevent weird iframe behaviour when switching players [`#264`](https://github.com/CookPete/react-player/issues/264) [`#265`](https://github.com/CookPete/react-player/issues/265)
+
+#### [v1.0.0-beta.3](https://github.com/CookPete/react-player/compare/v1.0.0-beta.2...v1.0.0-beta.3)
+
+> 30 October 2017
+
+- Tweak version script [`00d88ea`](https://github.com/CookPete/react-player/commit/00d88ea5cd27f94c0b0f030f002ad221adb8cedf)
+
+#### [v1.0.0-beta.2](https://github.com/CookPete/react-player/compare/v1.0.0-beta.1...v1.0.0-beta.2)
+
+> 30 October 2017
+
+- Add Soundcloud preload support [`#262`](https://github.com/CookPete/react-player/pull/262)
+- Use MIT license [`dd5a0ac`](https://github.com/CookPete/react-player/commit/dd5a0ac64d997aac5e81252ed591b07f9e4835a2)
+- Fix isPlaying bug [`193f3dd`](https://github.com/CookPete/react-player/commit/193f3dde5cec068e5ec1379d9e789e9c5aa2edfd)
+
+#### [v1.0.0-beta.1](https://github.com/CookPete/react-player/compare/v1.0.0-beta.0...v1.0.0-beta.1)
+
+> 28 October 2017
+
+- Use latest auto-changelog [`d3401dc`](https://github.com/CookPete/react-player/commit/d3401dcb4d9b613bfb6c5413f808243061c9ee25)
+- Bump packages [`c381cc2`](https://github.com/CookPete/react-player/commit/c381cc2f17fffc9ecd6c6ac664e419d2f67453ab)
+- Prevent errors when unmounting before SDK loads [`979e639`](https://github.com/CookPete/react-player/commit/979e639b8f8faca50509c692d1688e7eb39fef50)
+
+#### [v1.0.0-beta.0](https://github.com/CookPete/react-player/compare/v0.25.3...v1.0.0-beta.0)
+
+> 26 October 2017
+
+- Refactor player rendering [`91d1542`](https://github.com/CookPete/react-player/commit/91d15424065575d759885e9b0f8969c8b1f4a7b4)
+- Update tests [`9b4d1c4`](https://github.com/CookPete/react-player/commit/9b4d1c4da466010e0d9f8a99f725b4e0c96db615)
+
+#### [v0.25.3](https://github.com/CookPete/react-player/compare/v0.25.2...v0.25.3)
+
+> 26 October 2017
+
+- Loop when player is running [`#257`](https://github.com/CookPete/react-player/pull/257)
+- properly destroy HLS.JS and / or DASH.JS instances [`#254`](https://github.com/CookPete/react-player/pull/254)
+- Fix preloading [`6dd81ba`](https://github.com/CookPete/react-player/commit/6dd81ba4f8e9335e1bd2d15b47cd8d6403b35a3b)
+- Update readme [`d5ba064`](https://github.com/CookPete/react-player/commit/d5ba064a42f3b0abfa4c0d78324305ef20120f54)
+
+#### [v0.25.2](https://github.com/CookPete/react-player/compare/v0.25.1...v0.25.2)
+
+> 17 October 2017
+
+- tweak Vimeo duration logic [`#251`](https://github.com/CookPete/react-player/pull/251)
+- Bump packages [`bf40e5f`](https://github.com/CookPete/react-player/commit/bf40e5fce5653df79f245588440f7b2f20f9a6cb)
+- Fix dash autoplay logic [`4e3545e`](https://github.com/CookPete/react-player/commit/4e3545ef8f0e1b46b4a1dcab0c4881c4e507b7f8)
+
+#### [v0.25.1](https://github.com/CookPete/react-player/compare/v0.25.0...v0.25.1)
+
+> 17 October 2017
+
+- Update typings for onProgress callback [`#246`](https://github.com/CookPete/react-player/pull/246)
+- Fix parameter name for Vimeo player configuration [`#243`](https://github.com/CookPete/react-player/pull/243)
+- Add passthrough prop support to typings [`#247`](https://github.com/CookPete/react-player/issues/247)
+- Fix Vimeo duration logic [`#250`](https://github.com/CookPete/react-player/issues/250)
+- fix parameter name for Vimeo player configuration [`f810221`](https://github.com/CookPete/react-player/commit/f8102218dd901e0e49a0d8301f5f38d73b92af92)
+
+#### [v0.25.0](https://github.com/CookPete/react-player/compare/v0.24.6...v0.25.0)
+
+> 4 October 2017
+
+- Update polyfill info [`#239`](https://github.com/CookPete/react-player/issues/239)
+- Use React 16 for demo [`#241`](https://github.com/CookPete/react-player/issues/241)
+- Tweak vimeo player logic [`#240`](https://github.com/CookPete/react-player/issues/240)
+- Bump packages [`a31ab1c`](https://github.com/CookPete/react-player/commit/a31ab1c4d7f2e783c129db938367fb7a44da4d8f)
+- Update scripts and config file names [`920c602`](https://github.com/CookPete/react-player/commit/920c6024ec1a2ed703f557e2d71ccc406026053b)
+- Remove promise and fetch polyfills from browser build [`a33238c`](https://github.com/CookPete/react-player/commit/a33238cb83493fefc83d01b38551ef5df9d33783)
+
+#### [v0.24.6](https://github.com/CookPete/react-player/compare/v0.24.5...v0.24.6)
+
+> 28 September 2017
+
+- Make getInternalPlayer more flexible [`#238`](https://github.com/CookPete/react-player/issues/238)
+
+#### [v0.24.5](https://github.com/CookPete/react-player/compare/v0.24.4...v0.24.5)
+
+> 16 September 2017
+
+- Update Streamable player to use player.js [`#237`](https://github.com/CookPete/react-player/issues/237)
+- Bump auto-changelog [`84ad345`](https://github.com/CookPete/react-player/commit/84ad345c926bf7fc47b0c61e77aea4c517cbd028)
+- Remove unnecessary stop logic from soundcloud [`f478f1a`](https://github.com/CookPete/react-player/commit/f478f1a3c29cfd8c95c4f49a17ddd05b1b042bc7)
+- Skip Streamable tests [`f210f93`](https://github.com/CookPete/react-player/commit/f210f93f5670d605b95887d4f44a8a22c9e42eee)
+
+#### [v0.24.4](https://github.com/CookPete/react-player/compare/v0.24.3...v0.24.4)
+
+> 14 September 2017
+
+- Updated TypeScript typings [`#235`](https://github.com/CookPete/react-player/pull/235)
+- Prevent warnings when unmounting preloading players [`4c4d2ec`](https://github.com/CookPete/react-player/commit/4c4d2ecb2ba624bffe211cb041a97b1c42da9cc1)
+
+#### [v0.24.3](https://github.com/CookPete/react-player/compare/v0.24.2...v0.24.3)
+
+> 14 September 2017
+
+- update of DOM listeners in FilePlayer when audio/video tags was switched [`#234`](https://github.com/CookPete/react-player/pull/234)
+- Use callPlayer util for player methods [`c760655`](https://github.com/CookPete/react-player/commit/c760655b26fbf3c01a129665861dc25661d91f7d)
+- Clean up tests [`717397e`](https://github.com/CookPete/react-player/commit/717397e2010a7c2a9d2bbb543e3390ee9be94e9c)
+- Refactor progress logic [`f1b12e2`](https://github.com/CookPete/react-player/commit/f1b12e22262236b6c514c13de3534b8e4ede3f67)
+
+#### [v0.24.2](https://github.com/CookPete/react-player/compare/v0.24.1...v0.24.2)
+
+> 11 September 2017
+
+- Add codecov support [`bc30340`](https://github.com/CookPete/react-player/commit/bc30340ce5da9299635bda0a1ad8560af9214516)
+- Add getConfig tests [`f7eb2b5`](https://github.com/CookPete/react-player/commit/f7eb2b55929842523377bda20d80b62eb6c9a7d1)
+- Player test tweaks [`c0ee179`](https://github.com/CookPete/react-player/commit/c0ee179cc61e316ca2f1f705bf53c65b304206a0)
+
+#### [v0.24.1](https://github.com/CookPete/react-player/compare/v0.24.0...v0.24.1)
+
+> 9 September 2017
+
+- Refactor player tests [`4551f25`](https://github.com/CookPete/react-player/commit/4551f25041a24b9efdc7587ec2a3c98a2fc26094)
+- Refactor player rendering logic [`2b62811`](https://github.com/CookPete/react-player/commit/2b62811bbb00333e52b93c4d1635cb78fbc67c51)
+- Add util tests [`586f179`](https://github.com/CookPete/react-player/commit/586f1794d14fc2acb5760ed0f123447def4cf69c)
+
+#### [v0.24.0](https://github.com/CookPete/react-player/compare/v0.23.0...v0.24.0)
+
+> 9 September 2017
+
+- Use single config prop [`#71`](https://github.com/CookPete/react-player/issues/71)
+- Fix webpack production config [`#231`](https://github.com/CookPete/react-player/issues/231)
+- Remove legacy Soundcloud player [`a55ef3c`](https://github.com/CookPete/react-player/commit/a55ef3c963d46a2cb1b1a7d71ba0d66ef3edcb20)
+- Readme tweaks [`c0071f2`](https://github.com/CookPete/react-player/commit/c0071f2f987384ff4a8d188bf98a54f03eb42ea8)
+- Bring back static canPlay util [`f4861d7`](https://github.com/CookPete/react-player/commit/f4861d714da0be1ec9f8c10c00342a6f9efdef41)
+
+#### [v0.23.0](https://github.com/CookPete/react-player/compare/v0.22.0...v0.23.0)
+
+> 8 September 2017
+
+- Soundcloud: use Widget API instead of HTTP API [`#199`](https://github.com/CookPete/react-player/pull/199)
+- Fixed broken TypeScript type definitions [`#230`](https://github.com/CookPete/react-player/pull/230)
+- Refactor development setup [`81df2a8`](https://github.com/CookPete/react-player/commit/81df2a8c929e4a7d4c10d5c6606964d6d7bf5f1e)
+- Use Widget instead of Soundcloud API [`4ea29f9`](https://github.com/CookPete/react-player/commit/4ea29f95c642b56b05464a5baab5cbe1fdb28e5a)
+- Tidy up Soundcloud player [`d0947e2`](https://github.com/CookPete/react-player/commit/d0947e256a7998a76820239eca5fabc28783bc91)
+
+#### [v0.22.0](https://github.com/CookPete/react-player/compare/v0.21.0...v0.22.0)
+
+> 3 September 2017
+
+- Move SDK loading logic into getSDK util [`318c9e9`](https://github.com/CookPete/react-player/commit/318c9e93cc55b00d939ab28ecaefce3467ef8440)
+- Add Twitch player [`288c18d`](https://github.com/CookPete/react-player/commit/288c18ddd582a9cd8b629216041a0166d4c23987)
+- Add sourcemap config to uglify plugin [`901dfbf`](https://github.com/CookPete/react-player/commit/901dfbf101e0d26f9c685088ad9a9b4d318d9950)
+
+#### [v0.21.0](https://github.com/CookPete/react-player/compare/v0.20.0...v0.21.0)
+
+> 2 September 2017
+
+- Add muted prop [`#221`](https://github.com/CookPete/react-player/issues/221)
+- Add onSeek prop [`#222`](https://github.com/CookPete/react-player/issues/222)
+- Tweak Wistia player load logic [`b0e725c`](https://github.com/CookPete/react-player/commit/b0e725cc7a5c964ba17f3422ebf7406f409f0a60)
+- Add missing typings [`8d1295e`](https://github.com/CookPete/react-player/commit/8d1295e6796ec31b66cfe5f6ef1694d8cafdad9e)
+- Update demo videos [`26411b9`](https://github.com/CookPete/react-player/commit/26411b9a29ddcdbb8fec9f8e244860d59f23601b)
+
+#### [v0.20.0](https://github.com/CookPete/react-player/compare/v0.19.1...v0.20.0)
+
+> 27 July 2017
+
+- Allow seekTo to accept number of seconds [`#75`](https://github.com/CookPete/react-player/issues/75)
+- Pass errors when playing files through to onError callback [`#200`](https://github.com/CookPete/react-player/issues/200)
+- Add support for subtitle tracks in FilePlayer [`#214`](https://github.com/CookPete/react-player/issues/214)
+- Unmute facebook video when setting volume [`#215`](https://github.com/CookPete/react-player/issues/215)
+- Bump packages [`8e9e57b`](https://github.com/CookPete/react-player/commit/8e9e57b37f18ec4358bc5bc940f5f7aed2f59a19)
+
+#### [v0.19.1](https://github.com/CookPete/react-player/compare/v0.19.0...v0.19.1)
+
+> 17 July 2017
+
+- More accurate played fraction for Wistia [`#201`](https://github.com/CookPete/react-player/pull/201)
+
+#### [v0.19.0](https://github.com/CookPete/react-player/compare/v0.18.0...v0.19.0)
+
+> 13 July 2017
+
+- Detatch HLS media when stopping [`#212`](https://github.com/CookPete/react-player/issues/212)
+- Add wistia player options [`#198`](https://github.com/CookPete/react-player/pull/198)
+- Pass through auto or falsey width and height to FilePlayer [`#211`](https://github.com/CookPete/react-player/issues/211)
+- Only use add-module-exports plugin for bower build [`#193`](https://github.com/CookPete/react-player/issues/193) [`#196`](https://github.com/CookPete/react-player/pull/196)
+- Bump packages [`7372bcb`](https://github.com/CookPete/react-player/commit/7372bcba6c737e195a3df1d772622f5324cff619)
+- Remove need for findDOMNode in Vimeo player [`f6abc06`](https://github.com/CookPete/react-player/commit/f6abc065deb0d526706170c91436f344de8ddc88)
+- Add streaming tools to readme [`adf1338`](https://github.com/CookPete/react-player/commit/adf1338f709bdb6eab5486b57f6bfbc2b9df3122)
+
+#### [v0.18.0](https://github.com/CookPete/react-player/compare/v0.17.2...v0.18.0)
+
+> 9 May 2017
+
+- Add support for HLS and DASH streams [`c28c7ff`](https://github.com/CookPete/react-player/commit/c28c7ff637298e6d9ecee588741980b9e0481bfc)
+- Bump packages [`6f8da1f`](https://github.com/CookPete/react-player/commit/6f8da1f1f6f643953d0e5c97635addf320c80da7)
+
+#### [v0.17.2](https://github.com/CookPete/react-player/compare/v0.17.1...v0.17.2)
+
+> 7 May 2017
+
+- Add forceAudio to fileConfig [`#188`](https://github.com/CookPete/react-player/issues/188)
+
+#### [v0.17.1](https://github.com/CookPete/react-player/compare/v0.17.0...v0.17.1)
+
+> 5 May 2017
+
+- Fix initial loading bug for Private Vimeo videos [`#187`](https://github.com/CookPete/react-player/pull/187)
+- Fix initial loading bug for Private Vimeo videos  [`ff8a449`](https://github.com/CookPete/react-player/commit/ff8a449546121be7bfd6f3bb357d9dc06a94fcaa)
+
+#### [v0.17.0](https://github.com/CookPete/react-player/compare/v0.16.0...v0.17.0)
+
+> 30 April 2017
+
+- Add support for m.youtube.com [`#186`](https://github.com/CookPete/react-player/issues/186)
+- Add support for multiple file sources [`#81`](https://github.com/CookPete/react-player/issues/81)
+- Remove need for Vimeo player IDs [`214a7af`](https://github.com/CookPete/react-player/commit/214a7afebaf00cd3c5b0af06cc63efb0786bd439)
+
+#### [v0.16.0](https://github.com/CookPete/react-player/compare/v0.15.0...v0.16.0)
+
+> 27 April 2017
+
+- Apply all non-valid props to the wrapper element [`#183`](https://github.com/CookPete/react-player/pull/183)
+- Ensure YouTube player is in DOM when stopping [`#180`](https://github.com/CookPete/react-player/pull/180)
+- Use new Vimeo player API [`#142`](https://github.com/CookPete/react-player/pull/142)
+- Fix FilePlayer seekTo bug [`#149`](https://github.com/CookPete/react-player/pull/149)
+- Add Facebook player [`#109`](https://github.com/CookPete/react-player/issues/109)
+- Apply all non-valid props to the wrapper element [`#167`](https://github.com/CookPete/react-player/issues/167)
+- Added DailyMotion support. [`71dcda6`](https://github.com/CookPete/react-player/commit/71dcda6c3d0d1705760f3196fd28810be5e86109)
+- DailyMotion tweaks [`64f3cd3`](https://github.com/CookPete/react-player/commit/64f3cd3add0ec6dcea3a0980963676e3b8aa12f0)
+- Bump babel-loader [`478c2c3`](https://github.com/CookPete/react-player/commit/478c2c3e987bb849d7e00ffc613f4cac5f3fd949)
+
+#### [v0.15.0](https://github.com/CookPete/react-player/compare/v0.14.3...v0.15.0)
+
+> 14 April 2017
+
+- Add vidmeConfig with choice of video format [`#162`](https://github.com/CookPete/react-player/issues/162)
+- Call player.load() when loading files [`#177`](https://github.com/CookPete/react-player/issues/177)
+- Add getCurrentTime and getDuration methods [`#178`](https://github.com/CookPete/react-player/issues/178)
+- Use prop-types library [`#179`](https://github.com/CookPete/react-player/issues/179)
+- Add loadedSeconds and playedSeconds to onProgress [`#164`](https://github.com/CookPete/react-player/issues/164)
+- Add playsinline prop [`#148`](https://github.com/CookPete/react-player/issues/148)
+- Bump packages [`41aac30`](https://github.com/CookPete/react-player/commit/41aac30d82255e2a530c0e131c5a615f2ca6e394)
+- Update to standard 10 [`1371cbc`](https://github.com/CookPete/react-player/commit/1371cbc344b7b932a4579de23c188dad02f2bdcb)
+- Bump snazzy [`90c60b3`](https://github.com/CookPete/react-player/commit/90c60b3722b81f15bfab3cc926153b7bb66631af)
+
+#### [v0.14.3](https://github.com/CookPete/react-player/compare/v0.14.2...v0.14.3)
+
+> 21 February 2017
+
+- Add assertion for canPlay with https://vimeo [`#141`](https://github.com/CookPete/react-player/pull/141)
+- Use npm 4.x on travis [`#143`](https://github.com/CookPete/react-player/pull/143)
+- Use ubuntu 14.04 for travis [`#144`](https://github.com/CookPete/react-player/pull/144)
+- fixed width & height of video when it is in fullscreen mode [`#151`](https://github.com/CookPete/react-player/pull/151)
+- update webpack to 2.2.1 [`#156`](https://github.com/CookPete/react-player/pull/156)
+- Fix vidme url regex [`#158`](https://github.com/CookPete/react-player/issues/158)
+- Bump packages [`92b9315`](https://github.com/CookPete/react-player/commit/92b9315f02f2b364b6cd59146e5c03587464cc5a)
+- Minor code style fixes [`b39b1ec`](https://github.com/CookPete/react-player/commit/b39b1ec05690610a091bdf229de03d71782ea059)
+- Add assertion for making sure canPlay is valid for https://vimeo [`0f55002`](https://github.com/CookPete/react-player/commit/0f550029c92754c193cb5b4adb835d960c2af1fe)
+
+#### [v0.14.2](https://github.com/CookPete/react-player/compare/v0.14.1...v0.14.2)
+
+> 14 February 2017
+
+- Fix youtube player vars config usage [`#152`](https://github.com/CookPete/react-player/issues/152)
+- Fix npm prepublish script on windows [`#139`](https://github.com/CookPete/react-player/issues/139)
+- fixed width & height of video when it is in fullscreen mode [`f966a15`](https://github.com/CookPete/react-player/commit/f966a15c2e2221359eee54e0753e8f0906e670fd)
+- Use cross-env for build scripts [`a6191cf`](https://github.com/CookPete/react-player/commit/a6191cf1d0c14453c88deccfc81db63a60a3a1e0)
+
+#### [v0.14.1](https://github.com/CookPete/react-player/compare/v0.14.0...v0.14.1)
+
+> 1 January 2017
+
+- Use video element for ogg files [`#137`](https://github.com/CookPete/react-player/issues/137)
+
+#### [v0.14.0](https://github.com/CookPete/react-player/compare/v0.13.0...v0.14.0)
+
+> 26 December 2016
+
+- Wistia support [`#133`](https://github.com/CookPete/react-player/pull/133)
+- Add yarn.lock [`690d031`](https://github.com/CookPete/react-player/commit/690d031a72a9057ee9313a05892f92343845593e)
+- Tidy up Wistia player [`9c82bfd`](https://github.com/CookPete/react-player/commit/9c82bfd332076fabb5e549e6e2c97cc7d6666a03)
+- Bump node-sass [`9d4689e`](https://github.com/CookPete/react-player/commit/9d4689ee8da2016d942b23e5a2b74d9df0d4e19c)
+
+#### [v0.13.0](https://github.com/CookPete/react-player/compare/v0.12.1...v0.13.0)
+
+> 12 December 2016
+
+- PlaybackRate change feature [`#123`](https://github.com/CookPete/react-player/pull/123)
+- Fix onProgress non-reporting if playing prop is not set. [`#127`](https://github.com/CookPete/react-player/pull/127)
+- Add additional audio file extensions to regex [`#131`](https://github.com/CookPete/react-player/pull/131)
+- Use node 6 on travis [`#130`](https://github.com/CookPete/react-player/pull/130)
+- Add typescript definition file [`#134`](https://github.com/CookPete/react-player/issues/134)
+- [feature] Change PlaybackRate [`d28c309`](https://github.com/CookPete/react-player/commit/d28c309529f59d961238d549c3391af7ea08a44f)
+- Fix incorrect duration calculation in demo app. [`4114677`](https://github.com/CookPete/react-player/commit/411467726be66f7f5d7fdba826da76323ef6883f)
+- Remove unnecessary escape characters [`ec078d1`](https://github.com/CookPete/react-player/commit/ec078d12a06730f5665b5e1786eb60751817a4f0)
+
+#### [v0.12.1](https://github.com/CookPete/react-player/compare/v0.12.0...v0.12.1)
+
+> 19 November 2016
+
+- Add fullscreen example to demo [`563252b`](https://github.com/CookPete/react-player/commit/563252be94cafd5d973271f56c91fda4b1f87e4f)
+- Fullscreen youtube player fix [`83e8e60`](https://github.com/CookPete/react-player/commit/83e8e60a018e85bb27aa907360142f0a63761d54)
+
+#### [v0.12.0](https://github.com/CookPete/react-player/compare/v0.11.0...v0.12.0)
+
+> 10 October 2016
+
+- Pass DOM node to YouTube Player instead of ID [`#111`](https://github.com/CookPete/react-player/pull/111)
+- update all dependencies [`#107`](https://github.com/CookPete/react-player/pull/107)
+- Add showArtwork option to soundcloud config [`#108`](https://github.com/CookPete/react-player/issues/108)
+- Tidy up code [`0f18e71`](https://github.com/CookPete/react-player/commit/0f18e712935dfe50dafb4f40b3794e7150c4b476)
+- Add Vidme support [`609ee08`](https://github.com/CookPete/react-player/commit/609ee0845199879141dd89b20d3fbc996c20fdee)
+- Remove anonymous ref callback functions [`26aec63`](https://github.com/CookPete/react-player/commit/26aec63f05bfeba28536645dba5f0cbf0c5891a8)
+
+#### [v0.11.0](https://github.com/CookPete/react-player/compare/v0.10.0...v0.11.0)
+
+> 26 September 2016
+
+- Add onReady prop [`#106`](https://github.com/CookPete/react-player/issues/106)
+
+#### [v0.10.0](https://github.com/CookPete/react-player/compare/v0.9.0...v0.10.0)
+
+> 25 September 2016
+
+- Add `hidden` prop to ReactPlayer [`#102`](https://github.com/CookPete/react-player/pull/102)
+- Use mounted property to prevent setting state when unmounted [`#105`](https://github.com/CookPete/react-player/issues/105)
+- Update onProgress logic to still report loaded amounts when paused [`#94`](https://github.com/CookPete/react-player/issues/94)
+- Remove brackets from single param arrow functions [`ab24d08`](https://github.com/CookPete/react-player/commit/ab24d085b4ad72bb6e0c9ea43ca59e69be0d88f3)
+- Add Streamable player [`ff6a300`](https://github.com/CookPete/react-player/commit/ff6a3006ec8960d51a884762ce2f767857ec01cf)
+- Use ref callbacks instead of ref strings [`6c16ba0`](https://github.com/CookPete/react-player/commit/6c16ba0f44d0403ae3e089ca1dafed0077b095e7)
+
+#### [v0.9.0](https://github.com/CookPete/react-player/compare/v0.8.0...v0.9.0)
+
+> 9 August 2016
+
+- Ensure YouTube SDK is loaded before resolving promise [`#88`](https://github.com/CookPete/react-player/issues/88)
+- Fix looping behaviour [`#91`](https://github.com/CookPete/react-player/issues/91)
+- Add style prop [`#92`](https://github.com/CookPete/react-player/issues/92)
+- Skip tests before versioning [`ed6cab0`](https://github.com/CookPete/react-player/commit/ed6cab0cc983efaf0ef8813b77a0a3a407091726)
+
+#### [v0.8.0](https://github.com/CookPete/react-player/compare/v0.7.5...v0.8.0)
+
+> 29 July 2016
+
+- Add support for non-es5 compatible browsers [`#87`](https://github.com/CookPete/react-player/pull/87)
+- Render FilePlayer by default [`8d249ce`](https://github.com/CookPete/react-player/commit/8d249cedb234f63e59858840a5ea40b899632177)
+- Bump packages [`2d43659`](https://github.com/CookPete/react-player/commit/2d436592fedbba4b92653e1f929d5a31ccf3b14d)
+
+#### [v0.7.5](https://github.com/CookPete/react-player/compare/v0.7.4...v0.7.5)
+
+> 27 July 2016
+
+- Always send both played and loaded values in progress events [`#79`](https://github.com/CookPete/react-player/issues/79)
+- Add RTSP stream support to FilePlayer [`#83`](https://github.com/CookPete/react-player/issues/83)
+- Move initial setVolume to onStart [`#82`](https://github.com/CookPete/react-player/issues/82)
+- Update player when width or height changes [`#84`](https://github.com/CookPete/react-player/issues/84)
+- Stop progress loop on pause [`180039b`](https://github.com/CookPete/react-player/commit/180039b19b3975e7e0ecae1202ccb304d829fba7)
+- Add babel es3 plugins [`26abe2c`](https://github.com/CookPete/react-player/commit/26abe2ccb66e9677a20baa5f6a0da64262f53ef8)
+
+#### [v0.7.4](https://github.com/CookPete/react-player/compare/v0.7.3...v0.7.4)
+
+> 23 June 2016
+
+- Pause FilePlayer when stopping [`#78`](https://github.com/CookPete/react-player/issues/78)
+
+#### [v0.7.3](https://github.com/CookPete/react-player/compare/v0.7.2...v0.7.3)
+
+> 21 June 2016
+
+- Pass fileConfig down correctly [`1dffcca`](https://github.com/CookPete/react-player/commit/1dffccafca1f3440068a66e661a1fced9cde1593)
+
+#### [v0.7.2](https://github.com/CookPete/react-player/compare/v0.7.1...v0.7.2)
+
+> 3 June 2016
+
+- Add m4v and m4a extensions to filePlayer [`#72`](https://github.com/CookPete/react-player/issues/72)
+- Fix onDuration being called with null [`#52`](https://github.com/CookPete/react-player/issues/52)
+- Rename seekOnReady to seekOnPlay [`91f7344`](https://github.com/CookPete/react-player/commit/91f73449e835c5e7bda30889e909510118f8c84f)
+- Add failing onDuration test [`564243e`](https://github.com/CookPete/react-player/commit/564243e19449326eab30c163f9ffb82678fcf502)
+- Nest media switching test in a describe block [`2fe8806`](https://github.com/CookPete/react-player/commit/2fe8806996b915f59d5105b2f304018152c75a0b)
+
+#### [v0.7.1](https://github.com/CookPete/react-player/compare/v0.7.0...v0.7.1)
+
+> 1 June 2016
+
+- Update supported file type regex [`#68`](https://github.com/CookPete/react-player/pull/68)
+- Update README.md links [`#66`](https://github.com/CookPete/react-player/pull/66)
+- Tweak example usage [`eff2623`](https://github.com/CookPete/react-player/commit/eff2623b302312116ff0a6bd2e60aca04f2473e6)
+- make file extensions case insensitive [`6f0f346`](https://github.com/CookPete/react-player/commit/6f0f34682106bafa40b9a68de2d77d4f9425b1f5)
+- Update supported media readme [`c37e87e`](https://github.com/CookPete/react-player/commit/c37e87ee92665facf96e0d9c08ca5dfc654b99ec)
+
+#### [v0.7.0](https://github.com/CookPete/react-player/compare/v0.6.0...v0.7.0)
+
+> 21 May 2016
+
+- Use filePlayer for SoundCloud tracks [`#64`](https://github.com/CookPete/react-player/issues/64)
+- Add controls prop [`9a2ae22`](https://github.com/CookPete/react-player/commit/9a2ae229283e0c41ceea62ba01cdac243cf2bb82)
+- Tidy up filePlayer [`79c2d5a`](https://github.com/CookPete/react-player/commit/79c2d5a16f999628493c3ac7ce052960ae5be67a)
+- Skip FilePlayer onError test [`c4ed490`](https://github.com/CookPete/react-player/commit/c4ed49093f307ea7c844987d1f9e398a4dea5596)
+
+#### [v0.6.0](https://github.com/CookPete/react-player/compare/v0.5.8...v0.6.0)
+
+> 19 May 2016
+
+- Add filePlayer config prop [`#62`](https://github.com/CookPete/react-player/issues/62)
+- Add loop prop [`#57`](https://github.com/CookPete/react-player/issues/57)
+- Add onStart prop [`#61`](https://github.com/CookPete/react-player/issues/61)
+- Use fetch-jsonp for SoundCloud resolve endpoint [`#24`](https://github.com/CookPete/react-player/issues/24) [`#47`](https://github.com/CookPete/react-player/issues/47)
+- Remove class property semicolons [`0c8070d`](https://github.com/CookPete/react-player/commit/0c8070dbac394d40268b2df505672fbbd8befc2a)
+- Remove arrow function brackets [`cb71f30`](https://github.com/CookPete/react-player/commit/cb71f30975407638445e1038a1ee45edce73b021)
+- Add contribution guidelines [`16f515d`](https://github.com/CookPete/react-player/commit/16f515ddf693c18d5b5916b3f85ffb0cca551e3c)
+
+#### [v0.5.8](https://github.com/CookPete/react-player/compare/v0.5.7...v0.5.8)
+
+> 19 April 2016
+
+- Bump packages [`#56`](https://github.com/CookPete/react-player/issues/56)
+- Better canPlay test grouping [`f528ade`](https://github.com/CookPete/react-player/commit/f528ade2ef7a8403c3a517fa52818dce6f07f6f7)
+- Move all tests to Karma [`bbefce0`](https://github.com/CookPete/react-player/commit/bbefce019a8620829c6f663d6536a15caa587ea1)
+- Add footer to demo [`546678c`](https://github.com/CookPete/react-player/commit/546678c33c2ea1331ed7f63712f40687c83b73be)
+
+#### [v0.5.7](https://github.com/CookPete/react-player/compare/v0.5.6...v0.5.7)
+
+> 13 April 2016
+
+- Pass on error event [`#48`](https://github.com/CookPete/react-player/pull/48)
+- Add FilePlayer support for urls with query string [`#45`](https://github.com/CookPete/react-player/pull/45)
+- Add progressFrequency prop [`#50`](https://github.com/CookPete/react-player/issues/50)
+- Only include played amount in onProgress when playing [`#51`](https://github.com/CookPete/react-player/issues/51)
+- Pass on event including error message and code onError [`#44`](https://github.com/CookPete/react-player/issues/44)
+- Add default props to readme [`2abb25e`](https://github.com/CookPete/react-player/commit/2abb25e68b6e5caa7d68e3cbfeab63789add2728)
+- Ignore dist when linting [`1740ca6`](https://github.com/CookPete/react-player/commit/1740ca6cb58d8b6f274074f364e385f2b107292b)
+- Specify https in YouTube SDK location [`c05bd9d`](https://github.com/CookPete/react-player/commit/c05bd9dff3a8595c5bb2e53c33ddaf8db8c894de)
+
+#### [v0.5.6](https://github.com/CookPete/react-player/compare/v0.5.5...v0.5.6)
+
+> 8 March 2016
+
+- Fix bower support [`#42`](https://github.com/CookPete/react-player/issues/42)
+- Update readme with mobile considerations [`#41`](https://github.com/CookPete/react-player/issues/41)
+- Remove comments from production builds [`03a4e22`](https://github.com/CookPete/react-player/commit/03a4e22a80f8c64fdc31acc33829b88ac15c85d5)
+- Fix browser build [`78463b2`](https://github.com/CookPete/react-player/commit/78463b2592a12eac990673a991aada66f86b1434)
+- Bump karma-mocha-reporter [`98bc28a`](https://github.com/CookPete/react-player/commit/98bc28a9d9200f6ce0d4545abc352481701839cd)
+
+#### [v0.5.5](https://github.com/CookPete/react-player/compare/v0.5.4...v0.5.5)
+
+> 29 February 2016
+
+- Add browser build [`#35`](https://github.com/CookPete/react-player/issues/35) [`#38`](https://github.com/CookPete/react-player/issues/38)
+- Add promise and fetch polyfills to build [`#39`](https://github.com/CookPete/react-player/issues/39)
+- Update standard code style [`7231c45`](https://github.com/CookPete/react-player/commit/7231c458fb0af80370f308d3d77aab71c226aac6)
+- Add bower.json [`e95ee66`](https://github.com/CookPete/react-player/commit/e95ee66ffeeeb50bcf2e7666c1b90fa2676d6688)
+- Add react-component keyword [`fb50625`](https://github.com/CookPete/react-player/commit/fb506250f35efaa228f34d49ad67f2a0a1a36d44)
+
+#### [v0.5.4](https://github.com/CookPete/react-player/compare/v0.5.3...v0.5.4)
+
+> 3 February 2016
+
+- Remove the need for array.find polyfill [`7aa4719`](https://github.com/CookPete/react-player/commit/7aa471943def19d9e9b0abab3cf1172cb1db1cb1)
+- Add demo deployment to travis build [`60bcaf6`](https://github.com/CookPete/react-player/commit/60bcaf6aa7c0b100a514c495ff521a42cdfe1235)
+- Tweak YouTube default playerVars [`b99e6d9`](https://github.com/CookPete/react-player/commit/b99e6d94e7534e7a8d8e434eaf4473b4ca480601)
+
+#### [v0.5.3](https://github.com/CookPete/react-player/compare/v0.5.2...v0.5.3)
+
+> 26 January 2016
+
+- Support YouTube start time param [`7908463`](https://github.com/CookPete/react-player/commit/7908463d2dc1d3f59910432edd45460da152d426)
+- Better karma test grouping [`8a3d4e8`](https://github.com/CookPete/react-player/commit/8a3d4e83944466945002634c84a1c1bfa5035fd9)
+- Better SoundCloud error handling [`bce57af`](https://github.com/CookPete/react-player/commit/bce57af06f3296587f75dea7e5a87d4da2c8e6a9)
+
+#### [v0.5.2](https://github.com/CookPete/react-player/compare/v0.5.1...v0.5.2)
+
+> 25 January 2016
+
+- Vimeo fullscreen support [`#33`](https://github.com/CookPete/react-player/issues/33)
+- Tweak readme [`a741b2c`](https://github.com/CookPete/react-player/commit/a741b2c381dae449916895ce13f81e14dccf3afa)
+- Add preload to propTypes [`ad05a91`](https://github.com/CookPete/react-player/commit/ad05a91622fd050b69f290720a7a7fe9b8881df7)
+
+#### [v0.5.1](https://github.com/CookPete/react-player/compare/v0.5.0...v0.5.1)
+
+> 21 January 2016
+
+- Move onDuration callback from onReady to onPlay [`#31`](https://github.com/CookPete/react-player/issues/31)
+- Destructure state in demo render method [`6ed327d`](https://github.com/CookPete/react-player/commit/6ed327db830a9b0ea98acf111b94122b6f4c8418)
+- Add simple Duration component to improve demo [`d42c6d3`](https://github.com/CookPete/react-player/commit/d42c6d3c4c1e323e8d856b0a2b2c95e526d55e81)
+- Change onProgress frequency to 1 second [`45746d9`](https://github.com/CookPete/react-player/commit/45746d96ebef9a290fca4a88deaeaa83843ca4ad)
+
+#### [v0.5.0](https://github.com/CookPete/react-player/compare/v0.4.2...v0.5.0)
+
+> 14 January 2016
+
+- Add onDuration prop [`#28`](https://github.com/CookPete/react-player/issues/28)
+- Ensure YouTube player calls onReady on subsequent loads [`3a997bb`](https://github.com/CookPete/react-player/commit/3a997bb63878ccff551a12e8e076f63b8cf208a3)
+- Ensure vimeo player has duration before calling onReady [`8b31a8f`](https://github.com/CookPete/react-player/commit/8b31a8ff77aa57b611996670b9b09d2d9b9aeae8)
+- Add live demo to readme [`4aa8a29`](https://github.com/CookPete/react-player/commit/4aa8a292f2e3ee20f79e4a815d09f353da6a553d)
+
+#### [v0.4.2](https://github.com/CookPete/react-player/compare/v0.4.1...v0.4.2)
+
+> 11 January 2016
+
+- Add semicolons to class properties [`#27`](https://github.com/CookPete/react-player/issues/27)
+- Limit Travis to just basic tests [`#26`](https://github.com/CookPete/react-player/issues/26)
+- Bump packages [`21f03b2`](https://github.com/CookPete/react-player/commit/21f03b2309951456c86567c1ff254628814af224)
+
+#### [v0.4.1](https://github.com/CookPete/react-player/compare/v0.4.0...v0.4.1)
+
+> 11 January 2016
+
+- Add more files to .npmignore [`1cd8052`](https://github.com/CookPete/react-player/commit/1cd80526d32a5b060208b3d1e7883adcfcd7cfe6)
+- Update auto-changelog [`1cebd28`](https://github.com/CookPete/react-player/commit/1cebd28b25d66713204b5920052c8979d84c234d)
+- Fix npm badge link [`f6a146b`](https://github.com/CookPete/react-player/commit/f6a146b3904934dcd10287100400e54aeeb50541)
+
+#### [v0.4.0](https://github.com/CookPete/react-player/compare/v0.3.7...v0.4.0)
+
+> 9 January 2016
+
+- Use react-transform development setup [`#25`](https://github.com/CookPete/react-player/pull/25)
+- Add basic karma testing [`#22`](https://github.com/CookPete/react-player/issues/22)
+- Rebase on react-transform-boilerplate [`#8`](https://github.com/CookPete/react-player/issues/8)
+- Add styles and various fixes to the demo app [`0b16606`](https://github.com/CookPete/react-player/commit/0b16606615252a2584f6380912208b11b1df81c4)
+- Use a partial shrinkwrap to limit babel packages to 6.3 [`e9bcd72`](https://github.com/CookPete/react-player/commit/e9bcd72a16554231d0b9079944b3b99934011fbc)
+- Separate demo files [`c7230e7`](https://github.com/CookPete/react-player/commit/c7230e71d69d4e06b4de266c692b457e7a7c421f)
+
+#### [v0.3.7](https://github.com/CookPete/react-player/compare/v0.3.6...v0.3.7)
+
+> 4 January 2016
+
+- When seeking before player is ready, store value and seek later [`#19`](https://github.com/CookPete/react-player/issues/19)
+- Remove redundant soundcloud player options [`647fa9e`](https://github.com/CookPete/react-player/commit/647fa9ef1eb0150dd322614ad74b339439830b50)
+- Prevent IndexSizeError in FilePlayer [`ba31958`](https://github.com/CookPete/react-player/commit/ba31958aeaf11da9a0ef56915db311b3c5881181)
+- Fix FilePlayer not loading on mount [`00f9671`](https://github.com/CookPete/react-player/commit/00f9671a12bf09d0160653391a680165d6098adf)
+
+#### [v0.3.6](https://github.com/CookPete/react-player/compare/v0.3.5...v0.3.6)
+
+> 4 January 2016
+
+- Ensure volume on subsequent youtube loads [`5895663`](https://github.com/CookPete/react-player/commit/58956633754073e0c3d9316da9cadfd4a49a823c)
+
+#### [v0.3.5](https://github.com/CookPete/react-player/compare/v0.3.4...v0.3.5)
+
+> 4 January 2016
+
+- Fix YouTube onReady bugs [`#21`](https://github.com/CookPete/react-player/pull/21)
+- Set isReady before setVolume in onReady [`#23`](https://github.com/CookPete/react-player/issues/23)
+- Handle YouTube URL change during SDK load [`#20`](https://github.com/CookPete/react-player/issues/20)
+- Tidy up YouTube code [`64c952f`](https://github.com/CookPete/react-player/commit/64c952f31ca5397a13fbdbd35e3485dd2dbfc466)
+- Lint and test before versioning [`fdf2fa3`](https://github.com/CookPete/react-player/commit/fdf2fa39136b1286d0859af9b86cc253b9354743)
+
+#### [v0.3.4](https://github.com/CookPete/react-player/compare/v0.3.3...v0.3.4)
+
+> 3 January 2016
+
+- Update readme badges [`6d0503c`](https://github.com/CookPete/react-player/commit/6d0503c7d6706063394301af61db342caeff9272)
+- Fix YouTube pause guard [`1f8d372`](https://github.com/CookPete/react-player/commit/1f8d3720239353c496db3076b306cc52e99607dd)
+
+#### [v0.3.3](https://github.com/CookPete/react-player/compare/v0.3.2...v0.3.3)
+
+> 2 January 2016
+
+- Stronger guards for YouTube player methods [`f18792a`](https://github.com/CookPete/react-player/commit/f18792a2da3167f775d48481aa8eae150b747d4d)
+
+#### [v0.3.2](https://github.com/CookPete/react-player/compare/v0.3.1...v0.3.2)
+
+> 2 January 2016
+
+- Use explicit isReady property to guard player methods [`#18`](https://github.com/CookPete/react-player/issues/18)
+- Improve progress logic [`b0b3040`](https://github.com/CookPete/react-player/commit/b0b304049847d9568585bc11399fa6cfa4cab5dc)
+- Remove propTypes and defaultProps from players [`796edd1`](https://github.com/CookPete/react-player/commit/796edd129a6aaea148dcd72ea897321e66cae0c1)
+- Start using auto-changelog [`373b698`](https://github.com/CookPete/react-player/commit/373b698a49f2f35a37084fa3e59e4d0a7af971db)
+
+#### [v0.3.1](https://github.com/CookPete/react-player/compare/v0.3.0...v0.3.1)
+
+> 27 December 2015
+
+- Use displayNames for players [`#17`](https://github.com/CookPete/react-player/issues/17)
+- Fix changelog link [`f82b351`](https://github.com/CookPete/react-player/commit/f82b351aa6008d2cbb2e3bd95859d8a90a8e49d9)
+
+#### [v0.3.0](https://github.com/CookPete/react-player/compare/v0.2.1...v0.3.0)
+
+> 24 December 2015
+
+- Prime players to enable autoplay when out of focus [`#13`](https://github.com/CookPete/react-player/pull/13)
+- Enable multiple YouTube players [`#15`](https://github.com/CookPete/react-player/issues/15)
+- Prime Youtube and Vimeo players with a blank video [`#7`](https://github.com/CookPete/react-player/issues/7)
+- Move defaultProps to separate props file [`90ef334`](https://github.com/CookPete/react-player/commit/90ef33485369fc7892d11b2e4da04ffb64df1e99)
+- Always render every player [`158fdde`](https://github.com/CookPete/react-player/commit/158fdde54b6188c9f9ca3034e9cb5bcc3fe3ff69)
+- Move progress logic from players to top level component [`17fbef8`](https://github.com/CookPete/react-player/commit/17fbef87e82889f01d8257900f7edc55b05918a2)
+
+#### [v0.2.1](https://github.com/CookPete/react-player/compare/v0.2.0...v0.2.1)
+
+> 13 November 2015
+
+- Remove autoplay and only play if props.playing is true when ready [`#10`](https://github.com/CookPete/react-player/issues/10)
+- Be a bit more const-friendly [`a15700a`](https://github.com/CookPete/react-player/commit/a15700ac95349037ea6f4d9f52fddeff9530bbf5)
+- Better npm publish cleanup scripts [`821be95`](https://github.com/CookPete/react-player/commit/821be95265fb774e904c24ff553997b94b7b2e42)
+- Add onError support to FilePlayer [`63f1660`](https://github.com/CookPete/react-player/commit/63f1660890c8d4f6ce8912537167bc4fdf621020)
+
+#### [v0.2.0](https://github.com/CookPete/react-player/compare/v0.1.0...v0.2.0)
+
+> 6 November 2015
+
+- Configuration [`#4`](https://github.com/CookPete/react-player/pull/4)
+- Abort SoundCloud streaming if url changes during requests [`#6`](https://github.com/CookPete/react-player/issues/6)
+- pass configuration options to players via props [`f1395d1`](https://github.com/CookPete/react-player/commit/f1395d134a05b36db1736179e0b58ac9bc6bd76c)
+- Add change log [`28dfdad`](https://github.com/CookPete/react-player/commit/28dfdad7983f51a1c5271cbcfc6971d43fd78108)
+- Update readme [`e99df95`](https://github.com/CookPete/react-player/commit/e99df95a0aea6cd0ad151fa063678244b10f05af)
+
+#### [v0.1.0](https://github.com/CookPete/react-player/compare/v0.0.8...v0.1.0)
+
+> 19 October 2015
+
+- Add FilePlayer for HTML5 media files [`66482d5`](https://github.com/CookPete/react-player/commit/66482d51c38f3967c378160e31fcd29a28ec4616)
+- Add very basic shallow rendering tests [`7beccbe`](https://github.com/CookPete/react-player/commit/7beccbec2746029ef068d3f990fcc349257092f6)
+- Vimeo player improvements [`d308aa6`](https://github.com/CookPete/react-player/commit/d308aa62c70d902f95c1184d704f54ee1fcc98d3)
+
+#### [v0.0.8](https://github.com/CookPete/react-player/compare/v0.0.7...v0.0.8)
+
+> 20 September 2015
+
+- Use findDOMNode [`#3`](https://github.com/CookPete/react-player/issues/3)
+- Add basic unit tests for static canPlay method [`f1cde2c`](https://github.com/CookPete/react-player/commit/f1cde2c4fd6a939e944e82621908c26814a4b88b)
+- Improve SoundCloud URL regex [`3c4c5fa`](https://github.com/CookPete/react-player/commit/3c4c5fabc4f7440cd9931bd984174baf0f62dcce)
+
+#### [v0.0.7](https://github.com/CookPete/react-player/compare/v0.0.6...v0.0.7)
+
+> 10 September 2015
+
+- Guard against no iframe contentWindow in Vimeo player [`#2`](https://github.com/CookPete/react-player/pull/2)
+- Set correct initial state in ReactPlayer [`#2`](https://github.com/CookPete/react-player/pull/2)
+- Stop soundcloud track before playing another [`61bc61e`](https://github.com/CookPete/react-player/commit/61bc61e56fc5c7c2550d2a5e36bc072ae447329b)
+
+#### [v0.0.6](https://github.com/CookPete/react-player/compare/v0.0.5...v0.0.6)
+
+> 31 August 2015
+
+- Use shouldComponentUpdate to prevent unnecessary rendering [`b7ca5a6`](https://github.com/CookPete/react-player/commit/b7ca5a66ff91578a49da76c5efeac5ddd45959db)
+- Fix onProgress bug [`1bf018e`](https://github.com/CookPete/react-player/commit/1bf018ed5db4474ee9ba1f103e6df77983565875)
+
+#### [v0.0.5](https://github.com/CookPete/react-player/compare/v0.0.4...v0.0.5)
+
+> 27 August 2015
+
+- Use external propTypes file [`225dfa0`](https://github.com/CookPete/react-player/commit/225dfa073e63206dca65202ce3cf4f23e56c84db)
+- Add onError support [`df8dc61`](https://github.com/CookPete/react-player/commit/df8dc61582af5202e3eeb8d6141465be5ed1bf84)
+- Add .npmignore [`81adedc`](https://github.com/CookPete/react-player/commit/81adedc585e4cf0b6380ccb08f3ff613e7eed6c6)
+
+#### [v0.0.4](https://github.com/CookPete/react-player/compare/v0.0.3...v0.0.4)
+
+> 27 August 2015
+
+- Add Array.find() polyfill [`#1`](https://github.com/CookPete/react-player/issues/1)
+- Add fetch polyfill libraries to package.json [`#1`](https://github.com/CookPete/react-player/issues/1)
+
+#### [v0.0.3](https://github.com/CookPete/react-player/compare/v0.0.2...v0.0.3)
+
+> 26 August 2015
+
+- Update build script [`c9b627f`](https://github.com/CookPete/react-player/commit/c9b627ff9a2e146822d169c89b4ea265f2296f8e)
+- Update readme [`2ec1b86`](https://github.com/CookPete/react-player/commit/2ec1b86aad52e8bf3080d607e140762e4e268216)
+
+#### v0.0.2
+
+> 24 August 2015
+
+- First commit [`a4deecf`](https://github.com/CookPete/react-player/commit/a4deecfa421645e8e79ac9e33debe64d5b028dae)
+- Move react package to dev and peer dependencies [`f42ea0c`](https://github.com/CookPete/react-player/commit/f42ea0c73683d4c6e486a89684b4d6bb633a6969)

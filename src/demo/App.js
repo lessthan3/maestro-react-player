@@ -207,7 +207,7 @@ class App extends Component {
                 <label htmlFor='controls'>Controls</label>
               </th>
               <td>
-                <input id='controls' type='che`ckbox' checked={controls} onChange={this.toggleControls} />
+                <input id='controls' type='checkbox' checked={controls} onChange={this.toggleControls} />
                 <em>&nbsp; Requires player reload</em>
               </td>
             </tr>

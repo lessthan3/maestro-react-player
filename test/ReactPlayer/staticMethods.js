@@ -20,10 +20,10 @@ test('canPlay()', t => {
   t.true(ReactPlayer.canPlay('https://www.dailymotion.com/video/x5e9eog'))
   t.true(ReactPlayer.canPlay('https://www.mixcloud.com/mixcloud/meet-the-curators'))
   t.true(ReactPlayer.canPlay('http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4'))
-  t.skip.false(ReactPlayer.canPlay('http://example.com/random/path'))
+  t.false(ReactPlayer.canPlay('http://example.com/random/path'))
 })
 
-test.skip('addCustomPlayer()', t => {
+test('addCustomPlayer()', t => {
   class CustomPlayer {
     static displayName = 'CustomPlayer'
     static canPlay = url => /example\.com/.test(url)
