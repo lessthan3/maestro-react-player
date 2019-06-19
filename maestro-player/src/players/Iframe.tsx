@@ -11,7 +11,7 @@ export class Iframe extends ReactPlayer {
   currentTime: number = 0;
   playerID: string = PLAYER_ID_PREFIX + randomString();
   playTime: null | number = null;
-
+  static canEnablePIP() { return false; }
   static canPlay = (url: string) => MATCH_URL.test(url);
   getCurrentTime(): number {
     let playing = 0;
@@ -23,10 +23,13 @@ export class Iframe extends ReactPlayer {
   getDuration(): number {
     return Infinity;
   }
-  getSecondsLoaded(): null {
+  getSecondsLoaded = (): null => {
     return null;
   }
-  load(url: string) {
+  iframeRef = (container: HTMLIFrameElement) => {
+    this.container = container;
+  }
+  load() {
     if (!this.props.onReady) { return; }
     if (!this.container) {
       this.props.onReady();
@@ -48,9 +51,6 @@ export class Iframe extends ReactPlayer {
     if (this.props.onPlay) {
       this.props.onPlay();
     }
-  }
-  ref = (container: HTMLIFrameElement) => {
-    this.container = container;
   }
   render() {
     const style = {
@@ -76,8 +76,8 @@ export class Iframe extends ReactPlayer {
       return (
         <iframe
           id={this.playerID}
-          ref={this.ref}
-          src={playing && typeof url === 'string' ? url : undefined}
+          ref={this.iframeRef}
+          src={playing && typeof url === 'string' ? url.replace(/^iframe:/i, '') : undefined}
           frameBorder="0"
           scrolling="no"
           style={style}

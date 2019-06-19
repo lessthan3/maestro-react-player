@@ -332,7 +332,7 @@ export class VAST extends Component {
     return null
   }
 
-  getSecondsLoaded () {
+  getSecondsLoaded = () => {
     return null
   }
 

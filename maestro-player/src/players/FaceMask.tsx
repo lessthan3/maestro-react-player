@@ -19,6 +19,7 @@ export class FaceMask extends ReactPlayer {
   playerID: string = PLAYER_ID_PREFIX + randomString();
   secondsLoaded: null | number = null;
   volume: null | number = null;
+  static canEnablePIP() { return false; }
   static canPlay = (url: string) => MATCH_FILE_URL.test(url);
 
   getCurrentTime() {
@@ -27,7 +28,7 @@ export class FaceMask extends ReactPlayer {
   getDuration() {
     return this.duration || 0;
   }
-  getSecondsLoaded(): number | null {
+  getSecondsLoaded = (): number | null => {
     return this.secondsLoaded;
   }
   load(url: string) {

@@ -11,7 +11,7 @@ import { callPlayer, getSDK, randomString } from '../utils';
 const SDK_URL = '//cdn.jwplayer.com/libraries/8DNY8ff0.js';
 const SDK_GLOBAL = 'jwplayer';
 // TODO: figure out all cases
-const MATCH_VIDEO_URL = /jwplayer/;
+const MATCH_VIDEO_URL = /jwplayer|jwplatform/;
 const PLAYER_ID_PREFIX = 'jw-player-';
 
 export class JWPlayer extends ReactPlayer {
@@ -20,6 +20,7 @@ export class JWPlayer extends ReactPlayer {
   callPlayer = callPlayer;
   player: IJWPlayerInstance | null = null;
   playerID = PLAYER_ID_PREFIX + randomString();
+  static canEnablePIP() { return false; }
   static canPlay = (url: string) => MATCH_VIDEO_URL.test(url);
   getCurrentTime(): number {
     return this.callPlayer('getPosition');
@@ -30,7 +31,7 @@ export class JWPlayer extends ReactPlayer {
   getMuted(): boolean {
     return this.callPlayer('getMute');
   }
-  getSecondsLoaded(): number | null {
+  getSecondsLoaded = (): number | null => {
     const duration = this.getDuration();
     if (!(duration && Number.isFinite(duration))) { return null; }
     const buffered = this.callPlayer('getBuffer');
@@ -75,7 +76,7 @@ export class JWPlayer extends ReactPlayer {
       <div style={style} id={this.playerID} />
     );
   }
-  seekTo(seconds: number) {
+  seekTo = (seconds: number) => {
     this.callPlayer('seek', seconds);
   }
   setVolume(fraction: number) {

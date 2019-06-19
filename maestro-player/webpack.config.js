@@ -14,7 +14,7 @@ const PATH_SRC = join(__dirname, 'src')
 const PATH_INDEX = join(__dirname, 'index.html')
 const PATH_TESTS = join(__dirname, 'test', 'specs')
 module.exports = {
-  devtool: 'cheap-module-eval-source-map',
+  devtool: 'source-map',
   entry: [
     `webpack-dev-server/client?http://${HOST}:${PORT}`,
     'webpack/hot/only-dev-server',
@@ -68,6 +68,7 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json', '.mjs'],
   },
   devServer: {
+    disableHostCheck: true,
     host: HOST,
     port: PORT,
     publicPath: PUBLIC_PATH,
@@ -77,8 +78,4 @@ module.exports = {
       colors: true
     }
   }
-}
-
-function styleLoader (loaders) {
-  return loaders
 }

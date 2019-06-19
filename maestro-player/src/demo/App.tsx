@@ -4,27 +4,21 @@ import { findDOMNode } from 'react-dom';
 import { hot } from 'react-hot-loader';
 import screenfull from 'screenfull';
 
-import './App.css';
-import './defaults.css';
-import './range.css';
+// following css imports need to be imported in this order. keep white space
+// to prevent linter from auto-sorting
 import './reset.css';
+
+import './defaults.css';
+
+import './range.css';
+
+import './App.css';
+// end css imports
 
 import { version } from '../../package.json';
 import ReactPlayer from '../index';
+import demoMapping, { IDemoMap, Url } from './demoMapping';
 import Duration from './Duration';
-
-declare interface IUrlSource {
-  src: string;
-  type: string;
-}
-
-const MULTIPLE_SOURCES: IUrlSource[] = [
-  { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4', type: 'video/mp4' },
-  { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv', type: 'video/ogv' },
-  { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.webm', type: 'video/webm' },
-];
-
-declare type Url = IUrlSource[] | string | undefined;
 
 declare interface IState {
   controls: boolean;
@@ -62,6 +56,7 @@ class App extends Component {
   urlInput: null | HTMLInputElement = null;
 
   load = (url: Url) => {
+    console.log(url);
     this.setState({
       loaded: 0,
       pip: false,
@@ -130,6 +125,7 @@ class App extends Component {
   ref = (player: ReactPlayer) => {
     this.player = player;
   }
+
   render() {
     const {
       url,
@@ -188,7 +184,7 @@ class App extends Component {
                 <button onClick={this.stop}>Stop</button>
                 <button onClick={this.playPause}>{playing ? 'Pause' : 'Play'}</button>
                 <button onClick={this.onClickFullscreen}>Fullscreen</button>
-                {typeof url === 'string' && ReactPlayer.canEnablePIP(url) &&
+                {(typeof url === 'string') && ReactPlayer.canEnablePIP(url) &&
                   <button onClick={this.togglePIP}>{pip ? 'Disable PiP' : 'Enable PiP'}</button>
                 }
               </td>
@@ -266,145 +262,8 @@ class App extends Component {
           </tbody></table>
         </section>
         <section className="section">
-          <table><tbody>
-            <tr>
-              <th>jwplayer</th>
-              <td>
-                {this.renderLoadButton('https://cdn.jwplayer.com/videos/2uds76S9-HtWOEijk.mp4?exp=1548281117280&sig=1bde6d017cb469f0805c8a3d5f3e53d3', 'Natasha')}
-              </td>
-            </tr>
-            <tr>
-              <th>YouTube</th>
-              <td>
-                {this.renderLoadButton('https://www.youtube.com/watch?v=oUFJJNQGwhk', 'Test A')}
-                {this.renderLoadButton('https://www.youtube.com/watch?v=jNgP6d9HraI', 'Test B')}
-                {this.renderLoadButton('https://www.youtube.com/playlist?list=PLDEcUiPhzbjI217qs5KgMvbvx6-fgY_Al', 'Playlist')}
-              </td>
-            </tr>
-            <tr>
-              <th>SoundCloud</th>
-              <td>
-                {this.renderLoadButton('https://soundcloud.com/miami-nights-1984/accelerated', 'Test A')}
-                {this.renderLoadButton('https://soundcloud.com/tycho/tycho-awake', 'Test B')}
-              </td>
-            </tr>
-            <tr>
-              <th>Facebook</th>
-              <td>
-                {this.renderLoadButton('https://www.facebook.com/facebook/videos/10153231379946729/', 'Test A')}
-                {this.renderLoadButton('https://www.facebook.com/FacebookDevelopers/videos/10152454700553553/', 'Test B')}
-              </td>
-            </tr>
-            <tr>
-              <th>Vimeo</th>
-              <td>
-                {this.renderLoadButton('https://vimeo.com/90509568', 'Test A')}
-                {this.renderLoadButton('https://vimeo.com/169599296', 'Test B')}
-              </td>
-            </tr>
-            <tr>
-              <th>Twitch</th>
-              <td>
-                {this.renderLoadButton('https://www.twitch.tv/videos/106400740', 'Test A')}
-                {this.renderLoadButton('https://www.twitch.tv/videos/12783852', 'Test B')}
-                {this.renderLoadButton('https://www.twitch.tv/kronovi', 'Test C')}
-              </td>
-            </tr>
-            <tr>
-              <th>Streamable</th>
-              <td>
-                {this.renderLoadButton('https://streamable.com/moo', 'Test A')}
-                {this.renderLoadButton('https://streamable.com/ifjh', 'Test B')}
-              </td>
-            </tr>
-            <tr>
-              <th>Wistia</th>
-              <td>
-                {this.renderLoadButton('https://home.wistia.com/medias/e4a27b971d', 'Test A')}
-                {this.renderLoadButton('https://home.wistia.com/medias/29b0fbf547', 'Test B')}
-              </td>
-            </tr>
-            <tr>
-              <th>FaceMask</th>
-              <td>
-                {this.renderLoadButton('https://nflent-vh.akamaihd.net/i/films/2015/NFL_COM/show/NFLCOM/POST/22/160210_nfln_itn_car_vs_den_2nd_half_sb_highlights_413325_,180k,320k,500k,700k,1200k,2000k,3200k,5000k,.mp4.csmil/master.m3u8', 'Test A')}
-              </td>
-            </tr>
-            <tr>
-              <th>DailyMotion</th>
-              <td>
-                {this.renderLoadButton('https://www.dailymotion.com/video/x5e9eog', 'Test A')}
-                {this.renderLoadButton('https://www.dailymotion.com/video/x61xx3z', 'Test B')}
-              </td>
-            </tr>
-            <tr>
-              <th>UstreamLive</th>
-              <td>
-                {this.renderLoadButton('http://www.ustream.tv/channel/6540154', 'Test A')}
-                {this.renderLoadButton('http://www.ustream.tv/channel/9408562', 'Test B')}
-              </td>
-            </tr>
-            <tr>
-              <th>UstreamVideo</th>
-              <td>
-                {this.renderLoadButton('https://www.ustream.tv/recorded/119423438', 'Test A')}
-              </td>
-            </tr>
-            <tr>
-              <th>Iframe</th>
-              <td>
-                {this.renderLoadButton('https://mixer.com/embed/player/monstercat', 'Test B')}
-              </td>
-            </tr>
-            <tr>
-              <th>Mixcloud</th>
-              <td>
-                {this.renderLoadButton('https://www.mixcloud.com/mixcloud/meet-the-curators/', 'Test A')}
-                {this.renderLoadButton('https://www.mixcloud.com/mixcloud/mixcloud-curates-4-mary-anne-hobbs-in-conversation-with-dan-deacon/', 'Test B')}
-              </td>
-            </tr>
-            <tr>
-              <th>Files</th>
-              <td>
-                {this.renderLoadButton('http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4', 'mp4')}
-                {this.renderLoadButton('http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv', 'ogv')}
-                {this.renderLoadButton('http://clips.vorwaerts-gmbh.de/big_buck_bunny.webm', 'webm')}
-                {this.renderLoadButton('https://storage.googleapis.com/media-session/elephants-dream/the-wires.mp3', 'mp3')}
-                {this.renderLoadButton(MULTIPLE_SOURCES, 'Multiple')}
-                {this.renderLoadButton('https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8', 'HLS (m3u8)')}
-                {this.renderLoadButton('http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd', 'DASH (mpd)')}
-              </td>
-            </tr>
-            <tr>
-              <th>VAST</th>
-              <td>
-                {this.renderLoadButton('VAST:https://bs.serving-sys.com/Serving?cn=display&c=23&pl=VAST&pli=25235872&PluID=0&pos=7996&ord=%5Btimestamp%5D&cim=1', 'VAST')}
-                {this.renderLoadButton('VAST:https://svastx.moatads.com/groupmunilevervideo5876034363/Axe_-_UNE_AXE_461_AXE_YHWYC_2019-27846092_js.xml', 'VPAID')}
-              </td>
-            </tr>
-            <tr>
-              <th>Phenix</th>
-              <td>
-                {this.renderLoadButton('phenix:http://localhost:4004/end-to-end/v2/phenix/api|us-southwest#maestro.io#andyTest2.Doo3kmPq7VCi', 'Local')}
-              </td>
-            </tr>
-            <tr>
-              <th>Custom URL</th>
-              <td>
-                <input ref={(input: HTMLInputElement) => { this.urlInput = input; }} type="text" placeholder="Enter URL" />
-                <button
-                  onClick={() => {
-                    this.setState({ url: this.urlInput ? this.urlInput.value : undefined });
-                  }}
-                >
-                  Load
-                </button>
-              </td>
-            </tr>
-          </tbody></table>
-
+          {this.renderDemos(demoMapping)}
           <h2>State</h2>
-
           <table><tbody>
             <tr>
               <th>url</th>
@@ -452,9 +311,28 @@ class App extends Component {
       </div>
     );
   }
+
+  renderDemos = (items: IDemoMap[]) => {
+    const rows = items.map(({format, sources}: IDemoMap, index) => (
+      <tr key={`${format}-${index}`}>
+        <th>{format}</th>
+        <td>
+          {
+            sources.map(({title, url}: {title: string, url: Url}) => (
+              this.renderLoadButton(url, title)
+            ))
+          }
+        </td>
+      </tr>
+    ));
+
+    return (
+      <table><tbody>{rows}</tbody></table>
+    );
+  }
   renderLoadButton = (url: Url, label: string) => {
     return (
-      <button onClick={() => this.load(url)}>
+      <button key={label} onClick={() => this.load(url)}>
         {label}
       </button>
     );

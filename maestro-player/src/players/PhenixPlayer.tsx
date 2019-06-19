@@ -1,9 +1,15 @@
 // TODO: ReactPlayer's listener logic is very shaky because if you change the function identity
 //       it won't get cleaned up. This is an existing problem so we're not gonna fix it here.
-import React from 'react';
+import React, {ChangeEvent} from 'react';
 
 import ReactPlayer from 'react-player';
-import { IPhenix } from '../models/IPhenix';
+import FilePlayer from 'react-player/lib/players/FilePlayer';
+import {
+  IChannelExpress,
+  IJoinChannelCallback,
+  IPhenix,
+  ISubscriberCallback,
+} from '../models/IPhenix';
 import { getSDK } from '../utils';
 
 const PHENIX_SDK_URL = 'https://unpkg.com/phenix-web-sdk@2019.2.3/dist/phenix-web-sdk.min.js';
@@ -16,37 +22,21 @@ function getPhenixSdk() {
   return getSDK(PHENIX_SDK_URL, PHENIX_SDK_GLOBAL);
 }
 
-function canPlay(url) {
+function canPlay(url: string) {
   return PHENIX_URL_REGEX.test(url);
 }
 
 export class PhenixPlayer extends ReactPlayer {
   static canPlay = canPlay;
   static displayName = 'PhenixPlayer';
-  channelExpress = null;
-  player: null | HTMLVideoElement = null;
-
-  addListeners() {
-    const { onReady, onPlay, onPause, onEnded, onVolumeChange, onError, playsinline, videoElementId } = this.props;
-    this.player.addEventListener('canplay', onReady);
-    this.player.addEventListener('play', onPlay);
-    this.player.addEventListener('pause', onPause);
-    this.player.addEventListener('seeked', this.onSeek);
-    this.player.addEventListener('ended', onEnded);
-    this.player.addEventListener('error', onError);
-    this.player.addEventListener('volumechange', onVolumeChange);
-    // wow
-    this.player.setAttribute('id', videoElementId);
-    if (playsinline) {
-      this.player.setAttribute('playsinline', '');
-      this.player.setAttribute('webkit-playsinline', '');
-    }
-  }
+  channelExpress: null | IChannelExpress = null;
+  player: null | FilePlayer = null;
+  static canEnablePIP() { return false; }
 
   componentWillUnmount() {
     // TODO: If refs get called with null on unmount, no reason to do this
     if (this.player) {
-      this.removeListeners();
+      this.player.removeListeners();
       this.player = null;
     }
     if (this.channelExpress) {
@@ -54,38 +44,36 @@ export class PhenixPlayer extends ReactPlayer {
       this.channelExpress = null;
     }
   }
-  getCurrentTime() {
-    return this.player.currentTime;
+  getCurrentTime(): number {
+    if (!this.player) { return 0; }
+    return this.player.getCurrentTime();
   }
-  getDuration() {
-    return this.player.duration;
+  getDuration(): number {
+    if (!this.player) { return 0; }
+    return this.player.getDuration();
   }
 
-  getPhenixAuthenticationData(url = this.props.url) {
-    if (!url) { return {}; }
-    const match = PHENIX_URL_REGEX.exec(url)[3];
-    return match ? JSON.parse(match) : {};
+  getPhenixAuthenticationData(url = this.props.url): Record<string, any> {
+    if (!(url && typeof url === 'string')) { return {}; }
+    const match = PHENIX_URL_REGEX.exec(url);
+    return match ? JSON.parse(match[3]) : {};
   }
 
   getPhenixBackendUri(url = this.props.url): string {
-    if (!url) { return ; }
-    return PHENIX_URL_REGEX.exec(url)[1];
+    if (!(url && typeof url === 'string')) { return ''; }
+    const match = PHENIX_URL_REGEX.exec(url);
+    return match ? match[1] : '';
   }
 
-  getPhenixChannelId(url = this.props.url) {
-    return PHENIX_URL_REGEX.exec(url)[2];
+  getPhenixChannelId(url = this.props.url): string {
+    if (!(url && typeof url === 'string')) { return ''; }
+    const match = PHENIX_URL_REGEX.exec(url);
+    return match ? match[2] : '';
   }
-  getSecondsLoaded() {
-    const { buffered } = this.player;
-    if (buffered.length === 0) {
-      return 0;
-    }
-    const end = buffered.end(buffered.length - 1);
-    const duration = this.getDuration();
-    if (end > duration) {
-      return duration;
-    }
-    return end;
+
+  getSecondsLoaded = (): null | number => {
+    if (!this.player) { return null; }
+    return this.player.getSecondsLoaded();
   }
 
   load(url: string) {
@@ -93,24 +81,24 @@ export class PhenixPlayer extends ReactPlayer {
     const channelId = this.getPhenixChannelId(url);
     const authenticationData = this.getPhenixAuthenticationData(url);
 
-    const joinChannelCallback = (err, response) => {
+    const joinChannelCallback: IJoinChannelCallback = (err, response) => {
       const success = !err && response.status === 'ok';
       if (!success) {
         const error = err || new Error(`Response status: ${response.status}`);
-        this.props.onError(error);
+        if (this.props.onError) { this.props.onError(error); }
       }
     };
 
-    const subscriberCallback = (err, response) => {
+    const subscriberCallback: ISubscriberCallback = (err, response) => {
       const success = !err && ['ok', 'no-stream-playing'].includes(response.status);
       if (!success) {
         const error = err || new Error(`Response status: ${response.status}`);
-        this.props.onError(error);
+        if (this.props.onError) { this.props.onError(error); }
       }
       // otherwise, response.mediaStream.getStreamId() will be a thing
     };
 
-    getPhenixSdk().then((phenix) => {
+    getPhenixSdk().then((phenix: IPhenix) => {
       // TODO: Does this check do anything?
       if (url !== this.props.url) {
         return;
@@ -123,94 +111,76 @@ export class PhenixPlayer extends ReactPlayer {
         authenticationData,
         backendUri,
       });
-      this.channelExpress.joinChannel(
-        {
-          channelId,
-          videoElement: this.player,
-        },
-        joinChannelCallback,
-        subscriberCallback,
-      );
+      if (this.player && this.player.player && this.channelExpress) {
+        this.channelExpress.joinChannel(
+          {
+            channelId,
+            videoElement: this.player.player,
+          },
+          joinChannelCallback,
+          subscriberCallback,
+        );
+      }
     });
   }
   mute = () => {
-    this.player.muted = true;
-  }
-
-  onSeek = (e) => {
-    this.props.onSeek(e.target.currentTime);
+    if (!this.player) { return; }
+    this.player.mute();
   }
   pause() {
+    if (!this.player) { return; }
     this.player.pause();
   }
-
   play() {
-    const promise = this.player.play();
-    if (promise) {
-      promise.catch(this.props.onError);
-    }
+    if (!this.player) { return; }
+    this.player.play();
   }
 
-  playerRef = (player: HTMLVideoElement) => {
+  ref = (player: FilePlayer) => {
     if (player === this.player) {
       return;
     }
     if (this.player) {
-      this.removeListeners();
+      this.player.removeListeners();
     }
     this.player = player;
     if (this.player) {
-      this.addListeners();
+      this.player.addListeners();
     }
-  }
-  removeListeners() {
-    const { onReady, onPlay, onPause, onEnded, onVolumeChange, onError } = this.props;
-    this.player.removeEventListener('canplay', this.props.onReady);
-    this.player.removeEventListener('play', this.props.onPlay);
-    this.player.removeEventListener('pause', this.props.onPause);
-    this.player.removeEventListener('seeked', this.onSeek);
-    this.player.removeEventListener('ended', onEnded);
-    this.player.removeEventListener('error', onError);
-    this.player.removeEventListener('volumechange', onVolumeChange);
   }
 
   render() {
-    const { playing, loop, controls, muted, width, height } = this.props;
-    const style = {
-      width: width === 'auto' ? width : '100%',
-      height: height === 'auto' ? height : '100%',
-    };
     return (
-      <video
-        ref={this.playerRef}
-        style={style}
-        preload="auto" // TODO
-        autoPlay={playing} // TODO
-        controls={controls} // TODO
-        muted={muted}
-        loop={loop}
+      <FilePlayer
+        {...this.props}
+        ref={this.ref}
       />
     );
   }
-  seekTo(seconds) {
+  seekTo(seconds: number) {
     if (seconds === Infinity || this.getDuration() === Infinity) {
       return;
     }
-    this.player.currentTime = seconds;
+    if (!this.player) { return; }
+    this.player.seekTo(seconds);
   }
-  setPlaybackRate(rate) {
-    this.player.playbackRate = rate;
+  setPlaybackRate(rate: number) {
+    if (!this.player) { return; }
+    this.player.setPlaybackRate(rate);
   }
-  setVolume(fraction) {
-    this.player.volume = fraction;
+  setVolume(fraction: number) {
+    if (!this.player) { return; }
+    this.player.setVolume(fraction);
   }
   stop() {
     if (this.channelExpress) {
       this.channelExpress.dispose();
       this.channelExpress = null;
     }
+    if (this.player) { this.player.stop(); }
   }
   unmute = () => {
-    this.player.muted = false;
+    if (!this.player) { return; }
+    this.player.unmute();
   }
 }

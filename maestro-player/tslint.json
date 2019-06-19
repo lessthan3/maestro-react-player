@@ -4,11 +4,6 @@
       "tslint:recommended",
       "tslint-react"
   ],
-  "linterOptions": {
-    "exclude": [
-      "players/*"
-    ]
-  },
   "jsRules": {},
   "rules": {
     "indent": [true, "spaces", 2],
