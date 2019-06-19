@@ -1,0 +1,494 @@
+// tslint:disable:no-console max-line-length jsx-no-lambda
+import React, { Component } from 'react';
+import { findDOMNode } from 'react-dom';
+import { hot } from 'react-hot-loader';
+import screenfull from 'screenfull';
+
+import './App.css';
+import './defaults.css';
+import './range.css';
+import './reset.css';
+
+import { version } from '../../package.json';
+import ReactPlayer from '../index';
+import Duration from './Duration';
+
+declare interface IUrlSource {
+  src: string;
+  type: string;
+}
+
+const MULTIPLE_SOURCES: IUrlSource[] = [
+  { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4', type: 'video/mp4' },
+  { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv', type: 'video/ogv' },
+  { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.webm', type: 'video/webm' },
+];
+
+declare type Url = IUrlSource[] | string | undefined;
+
+declare interface IState {
+  controls: boolean;
+  duration: number;
+  light: boolean;
+  loaded: number;
+  loop: boolean;
+  muted: boolean;
+  pip: boolean;
+  playbackRate: number;
+  played: number;
+  playing: boolean;
+  seeking: boolean;
+  url: Url;
+  volume: number;
+}
+
+class App extends Component {
+  player: null | ReactPlayer = null;
+  state: IState = {
+    controls: false,
+    duration: 0,
+    light: false,
+    loaded: 0,
+    loop: false,
+    muted: false,
+    pip: false,
+    playbackRate: 1.0,
+    played: 0,
+    playing: true,
+    seeking: false,
+    url: undefined,
+    volume: 0.8,
+  };
+  urlInput: null | HTMLInputElement = null;
+
+  load = (url: Url) => {
+    this.setState({
+      loaded: 0,
+      pip: false,
+      played: 0,
+      url,
+    });
+  }
+  onClickFullscreen = () => {
+    const node = findDOMNode(this.player);
+    if (screenfull && node instanceof Element) {
+      screenfull.request(node);
+    }
+  }
+  onDisablePIP = () => {
+    console.log('onDisablePIP');
+    this.setState({ pip: false });
+  }
+  onDuration = (duration: number) => {
+    console.log('onDuration', duration);
+    this.setState({ duration });
+  }
+  onEnablePIP = () => {
+    console.log('onEnablePIP');
+    this.setState({ pip: true });
+  }
+  onEnded = () => {
+    console.log('onEnded');
+    this.setState({ playing: this.state.loop });
+  }
+  onPause = () => {
+    console.log('onPause');
+    this.setState({ playing: false });
+  }
+  onPlay = () => {
+    console.log('onPlay');
+    this.setState({ playing: true });
+  }
+  onProgress = (state: {
+    loaded: number,
+    loadedSeconds: number
+    played: number,
+    playedSeconds: number,
+  }) => {
+    console.log('onProgress', state);
+    // We only want to update time slider if we are not currently seeking
+    if (!this.state.seeking) {
+      this.setState(state);
+    }
+  }
+  onSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ played: Number.parseFloat(e.currentTarget.value) });
+  }
+  onSeekMouseDown = () => {
+    this.setState({ seeking: true });
+  }
+  onSeekMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
+    this.setState({ seeking: false });
+    if (this.player && e.target) {
+      this.player.seekTo(parseFloat(e.currentTarget.value));
+    }
+
+  }
+  playPause = () => {
+    this.setState({ playing: !this.state.playing });
+  }
+  ref = (player: ReactPlayer) => {
+    this.player = player;
+  }
+  render() {
+    const {
+      url,
+      playing,
+      controls,
+      light,
+      volume,
+      muted,
+      loop,
+      played,
+      loaded,
+      duration,
+      playbackRate,
+      pip,
+    } = this.state;
+    const SEPARATOR = ' · ';
+
+    return (
+      <div className="app">
+        <section className="section">
+          <h1>ReactPlayer Demo</h1>
+          <div className="player-wrapper">
+            <ReactPlayer
+              ref={this.ref}
+              className="react-player"
+              width="100%"
+              height="100%"
+              url={url || undefined}
+              pip={pip}
+              playing={playing}
+              controls={controls}
+              light={light}
+              loop={loop}
+              playbackRate={playbackRate}
+              volume={volume}
+              muted={muted}
+              onReady={() => console.log('onReady')}
+              onStart={() => console.log('onStart')}
+              onPlay={this.onPlay}
+              onEnablePIP={this.onEnablePIP}
+              onDisablePIP={this.onDisablePIP}
+              onPause={this.onPause}
+              onBuffer={() => console.log('onBuffer')}
+              onSeek={(e) => console.log('onSeek', e)}
+              onEnded={this.onEnded}
+              onError={(e) => console.log('onError', e)}
+              onProgress={this.onProgress}
+              onDuration={this.onDuration}
+            />
+          </div>
+
+          <table><tbody>
+            <tr>
+              <th>Controls</th>
+              <td>
+                <button onClick={this.stop}>Stop</button>
+                <button onClick={this.playPause}>{playing ? 'Pause' : 'Play'}</button>
+                <button onClick={this.onClickFullscreen}>Fullscreen</button>
+                {typeof url === 'string' && ReactPlayer.canEnablePIP(url) &&
+                  <button onClick={this.togglePIP}>{pip ? 'Disable PiP' : 'Enable PiP'}</button>
+                }
+              </td>
+            </tr>
+            <tr>
+              <th>Speed</th>
+              <td>
+                <button onClick={this.setPlaybackRate} value={1}>1x</button>
+                <button onClick={this.setPlaybackRate} value={1.5}>1.5x</button>
+                <button onClick={this.setPlaybackRate} value={2}>2x</button>
+              </td>
+            </tr>
+            <tr>
+              <th>Seek</th>
+              <td>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step="any"
+                  value={played}
+                  onMouseDown={this.onSeekMouseDown}
+                  onChange={this.onSeekChange}
+                  onMouseUp={this.onSeekMouseUp}
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>Volume</th>
+              <td>
+                <input type="range" min={0} max={1} step="any" value={volume} onChange={this.setVolume} />
+              </td>
+            </tr>
+            <tr>
+              <th>
+                <label htmlFor="controls">Controls</label>
+              </th>
+              <td>
+                <input id="controls" type="checkbox" checked={controls} onChange={this.toggleControls} />
+                <em>&nbsp; Requires player reload</em>
+              </td>
+            </tr>
+            <tr>
+              <th>
+                <label htmlFor="muted">Muted</label>
+              </th>
+              <td>
+                <input id="muted" type="checkbox" checked={muted} onChange={this.toggleMuted} />
+              </td>
+            </tr>
+            <tr>
+              <th>
+                <label htmlFor="loop">Loop</label>
+              </th>
+              <td>
+                <input id="loop" type="checkbox" checked={loop} onChange={this.toggleLoop} />
+              </td>
+            </tr>
+            <tr>
+              <th>
+                <label htmlFor="light">Light mode</label>
+              </th>
+              <td>
+                <input id="light" type="checkbox" checked={light} onChange={this.toggleLight} />
+              </td>
+            </tr>
+            <tr>
+              <th>Played</th>
+              <td><progress max={1} value={played} /></td>
+            </tr>
+            <tr>
+              <th>Loaded</th>
+              <td><progress max={1} value={loaded} /></td>
+            </tr>
+          </tbody></table>
+        </section>
+        <section className="section">
+          <table><tbody>
+            <tr>
+              <th>jwplayer</th>
+              <td>
+                {this.renderLoadButton('https://cdn.jwplayer.com/videos/2uds76S9-HtWOEijk.mp4?exp=1548281117280&sig=1bde6d017cb469f0805c8a3d5f3e53d3', 'Natasha')}
+              </td>
+            </tr>
+            <tr>
+              <th>YouTube</th>
+              <td>
+                {this.renderLoadButton('https://www.youtube.com/watch?v=oUFJJNQGwhk', 'Test A')}
+                {this.renderLoadButton('https://www.youtube.com/watch?v=jNgP6d9HraI', 'Test B')}
+                {this.renderLoadButton('https://www.youtube.com/playlist?list=PLDEcUiPhzbjI217qs5KgMvbvx6-fgY_Al', 'Playlist')}
+              </td>
+            </tr>
+            <tr>
+              <th>SoundCloud</th>
+              <td>
+                {this.renderLoadButton('https://soundcloud.com/miami-nights-1984/accelerated', 'Test A')}
+                {this.renderLoadButton('https://soundcloud.com/tycho/tycho-awake', 'Test B')}
+              </td>
+            </tr>
+            <tr>
+              <th>Facebook</th>
+              <td>
+                {this.renderLoadButton('https://www.facebook.com/facebook/videos/10153231379946729/', 'Test A')}
+                {this.renderLoadButton('https://www.facebook.com/FacebookDevelopers/videos/10152454700553553/', 'Test B')}
+              </td>
+            </tr>
+            <tr>
+              <th>Vimeo</th>
+              <td>
+                {this.renderLoadButton('https://vimeo.com/90509568', 'Test A')}
+                {this.renderLoadButton('https://vimeo.com/169599296', 'Test B')}
+              </td>
+            </tr>
+            <tr>
+              <th>Twitch</th>
+              <td>
+                {this.renderLoadButton('https://www.twitch.tv/videos/106400740', 'Test A')}
+                {this.renderLoadButton('https://www.twitch.tv/videos/12783852', 'Test B')}
+                {this.renderLoadButton('https://www.twitch.tv/kronovi', 'Test C')}
+              </td>
+            </tr>
+            <tr>
+              <th>Streamable</th>
+              <td>
+                {this.renderLoadButton('https://streamable.com/moo', 'Test A')}
+                {this.renderLoadButton('https://streamable.com/ifjh', 'Test B')}
+              </td>
+            </tr>
+            <tr>
+              <th>Wistia</th>
+              <td>
+                {this.renderLoadButton('https://home.wistia.com/medias/e4a27b971d', 'Test A')}
+                {this.renderLoadButton('https://home.wistia.com/medias/29b0fbf547', 'Test B')}
+              </td>
+            </tr>
+            <tr>
+              <th>FaceMask</th>
+              <td>
+                {this.renderLoadButton('https://nflent-vh.akamaihd.net/i/films/2015/NFL_COM/show/NFLCOM/POST/22/160210_nfln_itn_car_vs_den_2nd_half_sb_highlights_413325_,180k,320k,500k,700k,1200k,2000k,3200k,5000k,.mp4.csmil/master.m3u8', 'Test A')}
+              </td>
+            </tr>
+            <tr>
+              <th>DailyMotion</th>
+              <td>
+                {this.renderLoadButton('https://www.dailymotion.com/video/x5e9eog', 'Test A')}
+                {this.renderLoadButton('https://www.dailymotion.com/video/x61xx3z', 'Test B')}
+              </td>
+            </tr>
+            <tr>
+              <th>UstreamLive</th>
+              <td>
+                {this.renderLoadButton('http://www.ustream.tv/channel/6540154', 'Test A')}
+                {this.renderLoadButton('http://www.ustream.tv/channel/9408562', 'Test B')}
+              </td>
+            </tr>
+            <tr>
+              <th>UstreamVideo</th>
+              <td>
+                {this.renderLoadButton('https://www.ustream.tv/recorded/119423438', 'Test A')}
+              </td>
+            </tr>
+            <tr>
+              <th>Iframe</th>
+              <td>
+                {this.renderLoadButton('https://mixer.com/embed/player/monstercat', 'Test B')}
+              </td>
+            </tr>
+            <tr>
+              <th>Mixcloud</th>
+              <td>
+                {this.renderLoadButton('https://www.mixcloud.com/mixcloud/meet-the-curators/', 'Test A')}
+                {this.renderLoadButton('https://www.mixcloud.com/mixcloud/mixcloud-curates-4-mary-anne-hobbs-in-conversation-with-dan-deacon/', 'Test B')}
+              </td>
+            </tr>
+            <tr>
+              <th>Files</th>
+              <td>
+                {this.renderLoadButton('http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4', 'mp4')}
+                {this.renderLoadButton('http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv', 'ogv')}
+                {this.renderLoadButton('http://clips.vorwaerts-gmbh.de/big_buck_bunny.webm', 'webm')}
+                {this.renderLoadButton('https://storage.googleapis.com/media-session/elephants-dream/the-wires.mp3', 'mp3')}
+                {this.renderLoadButton(MULTIPLE_SOURCES, 'Multiple')}
+                {this.renderLoadButton('https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8', 'HLS (m3u8)')}
+                {this.renderLoadButton('http://dash.edgesuite.net/envivio/EnvivioDash3/manifest.mpd', 'DASH (mpd)')}
+              </td>
+            </tr>
+            <tr>
+              <th>VAST</th>
+              <td>
+                {this.renderLoadButton('VAST:https://bs.serving-sys.com/Serving?cn=display&c=23&pl=VAST&pli=25235872&PluID=0&pos=7996&ord=%5Btimestamp%5D&cim=1', 'VAST')}
+                {this.renderLoadButton('VAST:https://svastx.moatads.com/groupmunilevervideo5876034363/Axe_-_UNE_AXE_461_AXE_YHWYC_2019-27846092_js.xml', 'VPAID')}
+              </td>
+            </tr>
+            <tr>
+              <th>Phenix</th>
+              <td>
+                {this.renderLoadButton('phenix:http://localhost:4004/end-to-end/v2/phenix/api|us-southwest#maestro.io#andyTest2.Doo3kmPq7VCi', 'Local')}
+              </td>
+            </tr>
+            <tr>
+              <th>Custom URL</th>
+              <td>
+                <input ref={(input: HTMLInputElement) => { this.urlInput = input; }} type="text" placeholder="Enter URL" />
+                <button
+                  onClick={() => {
+                    this.setState({ url: this.urlInput ? this.urlInput.value : undefined });
+                  }}
+                >
+                  Load
+                </button>
+              </td>
+            </tr>
+          </tbody></table>
+
+          <h2>State</h2>
+
+          <table><tbody>
+            <tr>
+              <th>url</th>
+              <td className={!url ? 'faded' : ''}>
+                {(Array.isArray(url) ? 'Multiple' : url) || 'null'}
+              </td>
+            </tr>
+            <tr>
+              <th>playing</th>
+              <td>{playing ? 'true' : 'false'}</td>
+            </tr>
+            <tr>
+              <th>volume</th>
+              <td>{volume.toFixed(3)}</td>
+            </tr>
+            <tr>
+              <th>played</th>
+              <td>{played.toFixed(3)}</td>
+            </tr>
+            <tr>
+              <th>loaded</th>
+              <td>{loaded.toFixed(3)}</td>
+            </tr>
+            <tr>
+              <th>duration</th>
+              <td><Duration seconds={duration} /></td>
+            </tr>
+            <tr>
+              <th>elapsed</th>
+              <td><Duration seconds={duration * played} /></td>
+            </tr>
+            <tr>
+              <th>remaining</th>
+              <td><Duration seconds={duration * (1 - played)} /></td>
+            </tr>
+          </tbody></table>
+        </section>
+        <footer className="footer">
+          Version <strong>{version}</strong>
+          {SEPARATOR}
+          <a href="https://github.com/CookPete/react-player">GitHub</a>
+          {SEPARATOR}
+          <a href="https://www.npmjs.com/package/react-player">npm</a>
+        </footer>
+      </div>
+    );
+  }
+  renderLoadButton = (url: Url, label: string) => {
+    return (
+      <button onClick={() => this.load(url)}>
+        {label}
+      </button>
+    );
+  }
+  setPlaybackRate = (e: React.MouseEvent<HTMLButtonElement>) => {
+    this.setState({ playbackRate: parseFloat(e.currentTarget.value) });
+  }
+  setVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ volume: parseFloat(e.target.value) });
+  }
+  stop = () => {
+    this.setState({ url: null, playing: false });
+  }
+  toggleControls = () => {
+    const url = this.state.url;
+    this.setState({
+      controls: !this.state.controls,
+      url: null,
+    }, () => {
+      this.load(url);
+    });
+  }
+  toggleLight = () => {
+    this.setState({ light: !this.state.light });
+  }
+  toggleLoop = () => {
+    this.setState({ loop: !this.state.loop });
+  }
+  toggleMuted = () => {
+    this.setState({ muted: !this.state.muted });
+  }
+  togglePIP = () => {
+    this.setState({ pip: !this.state.pip });
+  }
+}
+
+export default hot(module)(App);

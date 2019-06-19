@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'path'``
 import config, { minifyPlugins } from './webpack.demo.babel'
 
 export default {

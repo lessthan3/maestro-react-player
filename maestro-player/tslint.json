@@ -1,0 +1,34 @@
+{
+  "defaultSeverity": "error",
+  "extends": [
+      "tslint:recommended",
+      "tslint-react"
+  ],
+  "linterOptions": {
+    "exclude": [
+      "players/*"
+    ]
+  },
+  "jsRules": {},
+  "rules": {
+    "indent": [true, "spaces", 2],
+    "jsx-no-multiline-js": false,
+    "member-access": [true, "no-public"],
+    "member-ordering": [
+      true,
+      {
+        "order": "fields-first",
+        "alphabetize": true
+      }
+    ],
+    "quotemark": [true, "single", "jsx-double"],
+    "trailing-comma": [
+      true,
+      {
+        "multiline": "always",
+        "esSpecCompliant": true
+      }
+    ]
+  },
+  "rulesDirectory": []
+}

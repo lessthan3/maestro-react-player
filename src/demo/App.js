@@ -199,7 +199,7 @@ class App extends Component {
             <tr>
               <th>Volume</th>
               <td>
-                <input type='range' min={0} max={1} step='any' value={volume} onChange={this.setVolume} />
+                <input type='range' min={0} max={1} step='any' value={volume} onChange={thisetVolume} />
               </td>
             </tr>
             <tr>
