@@ -113,8 +113,8 @@ export default class Player extends Component {
         if (progress.playedSeconds !== this.prevPlayed || progress.loadedSeconds !== this.prevLoaded) {
           this.props.onProgress(progress)
         }
-        this.prevPlayed = progress.playedSeconds;
-        this.prevLoaded = progress.loadedSeconds;
+        this.prevPlayed = progress.playedSeconds
+        this.prevLoaded = progress.loadedSeconds
       }
     }
     this.progressTimeout = setTimeout(this.progress, this.props.progressFrequency || this.props.progressInterval)
