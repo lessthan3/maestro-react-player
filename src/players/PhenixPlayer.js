@@ -127,6 +127,7 @@ export class PhenixPlayer extends Component {
       }
       this.channelExpress = new phenix.express.ChannelExpress({
         authenticationData,
+        disableConsoleLogging: true,
         backendUri
       })
       this.channelExpress.joinChannel(
