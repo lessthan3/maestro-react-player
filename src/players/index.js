@@ -9,6 +9,7 @@ import { Twitch } from './Twitch'
 import { DailyMotion } from './DailyMotion'
 import { UstreamLive } from './UstreamLive'
 import { UstreamVideo } from './UstreamVideo'
+import { Livestream } from './Livestream'
 import { Iframe } from './Iframe'
 import { Mixcloud } from './Mixcloud'
 import { FilePlayer } from './FilePlayer'
@@ -33,5 +34,6 @@ export default [
   JWPlayer,
   VAST,
   FilePlayer,
+  Livestream,
   Iframe
 ]

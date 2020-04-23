@@ -337,6 +337,13 @@ class App extends Component {
               </td>
             </tr>
             <tr>
+              <th>Livestream</th>
+              <td>
+                {this.renderLoadButton('https://livestream.com/accounts/1909571/events/8465750/videos/186258837', 'Test A')}
+                {this.renderLoadButton('https://livestream.com/accounts/11707815/events/4299357', 'Test B')}
+              </td>
+            </tr>
+            <tr>
               <th>Mixcloud</th>
               <td>
                 {this.renderLoadButton('https://www.mixcloud.com/mixcloud/meet-the-curators/', 'Test A')}
